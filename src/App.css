@@ -1,0 +1,104 @@
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #202e35;
+  background: #f5f7f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+
+button, input { font: inherit; }
+button { cursor: pointer; }
+
+.app { max-width: 1000px; margin: 0 auto; padding: 0 28px; }
+
+.encabezado {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; padding: 25px 0; border-bottom: 1px solid #e2e8e5;
+}
+
+.marca { display: flex; align-items: center; gap: 12px; }
+.simbolo {
+  display: grid; place-items: center; width: 43px; height: 43px;
+  border-radius: 14px; background: #176b58; color: white;
+  font-size: 30px; font-weight: 400;
+}
+
+h1, h2, p { margin-top: 0; }
+h1 { font: 800 21px 'Manrope', sans-serif; margin-bottom: 0; }
+.sobretitulo { font-size: 10px; letter-spacing: 1.6px; font-weight: 700; color: #658078; }
+.etiqueta { font-size: 10px; letter-spacing: 1px; color: #176b58; font-weight: 700; }
+
+.bienvenida {
+  margin-top: 30px; padding: 34px; border-radius: 22px;
+  background: #e5efea;
+}
+.bienvenida h2 {
+  font: 800 clamp(30px, 5vw, 45px)/1.15 'Manrope', sans-serif;
+  letter-spacing: -1.5px; margin: 13px 0;
+}
+.bienvenida p { color: #536962; line-height: 1.7; max-width: 540px; font-size: 14px; }
+
+.buscador {
+  display: flex; align-items: center; gap: 12px; margin-top: 24px;
+  background: white; border: 1px solid #dce5e0; border-radius: 12px;
+  padding: 0 15px; min-height: 52px; max-width: 620px;
+}
+.buscador > span { font-size: 26px; color: #176b58; }
+.buscador input { border: 0; outline: 0; width: 100%; min-width: 0; background: transparent; color: #202e35; }
+.buscador button, .cerrar { border: 0; background: transparent; font-size: 24px; color: #61736c; }
+
+.seccion { margin-top: 34px; }
+.titulo-seccion { display: flex; justify-content: space-between; align-items: end; gap: 12px; }
+.titulo-seccion h2 { font: 800 23px 'Manrope', sans-serif; margin: 6px 0 0; }
+.contador { font-size: 12px; color: #75857e; padding-bottom: 4px; }
+
+.filtros { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+.filtro { border: 1px solid #dce5e0; border-radius: 30px; padding: 9px 15px; color: #536962; background: white; font-size: 12px; }
+.filtro.activo { color: white; border-color: #176b58; background: #176b58; }
+
+.lista-temas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.tarjeta-tema {
+  width: 100%; display: flex; align-items: center; gap: 13px; text-align: left;
+  background: white; border: 1px solid #e4eae6; border-radius: 15px; padding: 18px 15px;
+  color: inherit; transition: border-color .15s, transform .15s;
+}
+.tarjeta-tema:hover { border-color: #7fa99b; transform: translateY(-1px); }
+.icono-tema { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 12px; background: #edf4f0; color: #176b58; font-size: 24px; }
+.contenido-tema { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.categoria { color: #28745f; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
+.contenido-tema strong { font: 700 14px/1.4 'Manrope', sans-serif; }
+.resumen { color: #718079; font-size: 12px; line-height: 1.5; }
+.flecha { margin-left: auto; color: #789088; font-size: 25px; }
+.vacio { padding: 20px; color: #687970; }
+
+footer { border-top: 1px solid #e2e8e5; margin-top: 42px; padding: 23px 0 32px; color: #75857e; font-size: 11px; line-height: 1.7; }
+footer p:first-child { letter-spacing: 1px; font-weight: 700; }
+
+.fondo-modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 18px; background: #142b26a8; }
+.modal { position: relative; background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 520px; box-shadow: 0 20px 80px #0002; }
+.modal h2 { font: 800 27px 'Manrope', sans-serif; margin: 12px 0; }
+.modal > p { color: #64756d; line-height: 1.7; }
+.cerrar { position: absolute; right: 18px; top: 12px; font-size: 30px; }
+.aviso { background: #f2f6f3; border-radius: 12px; padding: 16px; margin: 20px 0; font-size: 13px; line-height: 1.6; }
+.aviso p { margin: 7px 0 0; color: #61736a; }
+.boton-principal { border: 0; border-radius: 10px; padding: 12px 18px; background: #176b58; color: white; font-weight: 600; }
+
+@media (max-width: 620px) {
+  .app { padding: 0 17px; }
+  .encabezado { padding: 18px 0; }
+  .etiqueta { font-size: 8px; text-align: right; }
+  .bienvenida { padding: 25px 20px; margin-top: 20px; }
+  .lista-temas { grid-template-columns: 1fr; }
+  .seccion { margin-top: 28px; }
+  .titulo-seccion h2 { font-size: 21px; }
+}
