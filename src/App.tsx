@@ -75,7 +75,8 @@ function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
       const contenedor = objetivo?.closest<HTMLElement>('.modal-contenido')
       if (objetivo && contenedor) {
         const delta = objetivo.getBoundingClientRect().top - contenedor.getBoundingClientRect().top
-        contenedor.scrollTo({ top: contenedor.scrollTop + delta - 12, behavior: 'smooth' })
+        const margen = window.matchMedia('(max-width: 650px)').matches ? 72 : 12
+        contenedor.scrollTo({ top: contenedor.scrollTop + delta - margen, behavior: 'smooth' })
       }
     })
   }
@@ -166,20 +167,18 @@ function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
                     <span className="ficha-premium-seccion-estado"><Icon name="chevron" size={18}/></span>
                   </button>
                 </h3>
-                {abierto && (
-                  <div className="ficha-premium-seccion-contenido" id={'cad-contenido-' + indice}>
-                    {seccion.texto && <p>{seccion.texto}</p>}
-                    {seccion.puntos && <ul>{seccion.puntos.map((punto, puntoIndice) => <li key={puntoIndice}>{punto}</li>)}</ul>}
-                  </div>
-                )}
+                <div className="ficha-premium-seccion-contenido" id={'cad-contenido-' + indice} hidden={!abierto}>
+                  {seccion.texto && <p>{seccion.texto}</p>}
+                  {seccion.puntos && <ul>{seccion.puntos.map((punto, puntoIndice) => <li key={puntoIndice}>{punto}</li>)}</ul>}
+                </div>
               </section>
             )
           })}
         </div>
-        <section className="ficha-premium-bibliografia" ref={fuentesRef}>
+        <div className="ficha-premium-bibliografia" ref={fuentesRef}>
           <div className="ficha-premium-fuentes-encabezado"><span className="ficha-premium-fuentes-icono"><Icon name="book" size={19}/></span><div><span className="ficha-premium-eyebrow">RESPALDO CIENTÍFICO</span><h3>Bibliografía y guías</h3></div></div>
           <ul className="fuentes-clinicas">{ficha.fuentes.map((fuente) => <li key={fuente.url}><a href={fuente.url} target="_blank" rel="noreferrer">{fuente.titulo}<Icon name="arrow" size={15}/></a><p>{fuente.nota}</p></li>)}</ul>
-        </section>
+        </div>
         <p className="ficha-premium-nota"><Icon name="shield" size={16}/><span><strong>Nota de seguridad:</strong> material de apoyo para estudio. Verificar la versión vigente de las guías, el cuadro básico y el protocolo institucional; las decisiones y dosis se individualizan según el paciente.</span></p>
       </div>
     </div>
