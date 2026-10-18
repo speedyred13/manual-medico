@@ -76,3 +76,36 @@ test('claro y oscuro persisten y mantienen ventanas utilizables', async ({ page 
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'claro')
 })
+
+
+test('cetoacidosis despliega la vista interactiva y conserva todos sus apartados', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Abrir ficha destacada' }).click()
+  const ventana = page.getByRole('dialog')
+  const ficha = fichasClinicas['Cetoacidosis diabética']
+
+  await expect(ventana.locator('.ficha-premium-layout')).toBeVisible()
+  await expect(ventana.locator('.ficha-clinica section')).toHaveCount(ficha.secciones.length)
+  await expect(ventana.locator('.fuentes-clinicas a')).toHaveCount(ficha.fuentes.length)
+  const primera = ventana.locator('.ficha-premium-seccion').first()
+  const abrirPrimera = primera.getByRole('button', { name: /Definición y fisiopatología/i })
+  await expect(abrirPrimera).toHaveAttribute('aria-expanded', 'true')
+  await abrirPrimera.click()
+  await expect(abrirPrimera).toHaveAttribute('aria-expanded', 'false')
+  await expect(primera.locator('.ficha-premium-seccion-contenido')).toBeHidden()
+  await abrirPrimera.click()
+  await expect(abrirPrimera).toHaveAttribute('aria-expanded', 'true')
+
+  await ventana.getByRole('button', { name: 'Contraer todas' }).click()
+  await expect(ventana.locator('.ficha-premium-seccion button[aria-expanded="false"]')).toHaveCount(ficha.secciones.length)
+  await ventana.getByRole('button', { name: 'Expandir todas' }).click()
+  await expect(ventana.locator('.ficha-premium-seccion button[aria-expanded="true"]')).toHaveCount(ficha.secciones.length)
+
+  const indice = ventana.getByRole('navigation', { name: 'Ir a una sección' })
+  await indice.getByRole('button', { name: /Bibliografía y guías/ }).click()
+  await expect(ventana.getByRole('heading', { name: 'Bibliografía y guías' })).toBeVisible()
+
+  await ventana.getByLabel('Cerrar ficha').click()
+  await page.getByRole('button', { name: /Diabetes mellitus tipo 2/ }).last().click()
+  await expect(page.getByRole('dialog').locator('.ficha-premium-layout')).toHaveCount(0)
+});
