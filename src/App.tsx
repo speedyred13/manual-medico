@@ -356,11 +356,21 @@ function App() {
          </div>
        </section>
 
+       <section className="dashboard shell" aria-label="Panel de inicio">
+         <div className="dashboard-cabecera"><div><span className="sobretitulo">TU PANEL DE ESTUDIO</span><h2>Todo tu manual, en un vistazo</h2><p>Encuentra lo que necesitas y continúa estudiando sin perder tiempo.</p></div><a className="dashboard-enlace" href="#biblioteca-medica">Explorar biblioteca ↗</a></div>
+         <div className="dashboard-metricas">
+           <div className="dashboard-metrica"><span>Temas del catálogo</span><strong>{temas.length}</strong><small>Organizados para consulta</small></div>
+           <div className="dashboard-metrica"><span>Áreas clínicas</span><strong>{especialidades.length - 1}</strong><small>Filtra por especialidad</small></div>
+           <div className="dashboard-metrica"><span>Fichas con contenido</span><strong>{Object.keys(fichasClinicas).length}</strong><small>Otras fichas en desarrollo</small></div>
+         </div>
+         <div className="dashboard-accesos"><div><h3>Acceso rápido</h3><p>Abre directamente una ficha para repasar.</p></div><div className="dashboard-botones">{['Cetoacidosis diabética', 'Diabetes mellitus tipo 2', 'Estado hiperosmolar hiperglucémico'].map((nombre) => { const tema = temas.find((item) => item.nombre === nombre); return tema ? <button key={nombre} type="button" onClick={() => setSeleccionado(tema)}>{nombre}<span aria-hidden="true">↗</span></button> : null })}</div></div>
+       </section>
+
        <section className="seccion shell seccion-especialidades"><div className="titulo-seccion"><div><span className="sobretitulo">NAVEGACIÓN</span><h2>Explora por especialidad</h2><p>Selecciona un área para encontrar los temas relacionados.</p></div></div>
          <div className="filtros">{especialidades.map((item, indice) => <button key={item} className={`filtro ${especialidad === item ? 'activo' : ''}`} onClick={() => setEspecialidad(item)} aria-pressed={especialidad === item}><span className="filtro-icono">{indice === 0 ? '▦' : '✳'}</span>{item}</button>)}</div>
        </section>
 
-       <section className="seccion shell biblioteca"><div className="titulo-seccion titulo-biblioteca"><div><span className="sobretitulo">CONTENIDO CLÍNICO</span><h2>Biblioteca médica</h2><p>Abre una ficha para consultar el contenido disponible y sus referencias.</p></div><span className="contador"><strong>{resultados.length}</strong> {resultados.length === 1 ? 'tema' : 'temas'}</span></div>
+       <section className="seccion shell biblioteca" id="biblioteca-medica"><div className="titulo-seccion titulo-biblioteca"><div><span className="sobretitulo">CONTENIDO CLÍNICO</span><h2>Biblioteca médica</h2><p>Abre una ficha para consultar el contenido disponible y sus referencias.</p></div><span className="contador"><strong>{resultados.length}</strong> {resultados.length === 1 ? 'tema' : 'temas'}</span></div>
          <div className="lista-temas">{resultados.map((tema, indice) => <button className="tarjeta-tema" key={tema.nombre} onClick={() => setSeleccionado(tema)}><span className="icono-tema" aria-hidden="true"><span>{String(indice + 1).padStart(2, '0')}</span><b>↗</b></span><span className="contenido-tema"><span className="categoria">{tema.especialidad}</span><strong>{tema.nombre}</strong><span className="resumen">{tema.resumen}</span></span><span className="flecha" aria-hidden="true">↗</span></button>)}
            {resultados.length === 0 && <div className="vacio"><span>⌕</span><strong>No encontramos resultados</strong><p>Prueba con otra palabra o selecciona “Todas” las especialidades.</p><button type="button" onClick={() => { setBusqueda(''); setEspecialidad('Todas') }}>Limpiar filtros</button></div>}
          </div>
