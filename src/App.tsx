@@ -6,6 +6,7 @@ import { temas } from './data/catalogo.ts'
 import type { NombreTema } from './data/catalogo.ts'
 import { fichasClinicas } from './data/fichas.ts'
 import type { FichaClinica } from './data/types.ts'
+import { CADReferenciaRapida } from './components/CADReferenciaRapida.tsx'
 
 // Los filtros se generan automáticamente a partir de los temas.
 
@@ -60,18 +61,19 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
   // La ficha médica original se muestra íntegra: solo cambia su presentación.
   const [cerradas, setCerradas] = useState<number[]>([])
-  const [activo, setActivo] = useState<number | 'fuentes'>(0)
+  const [activo, setActivo] = useState<number | 'fuentes' | 'resumen'>('resumen')
   const referencias = useRef<(HTMLElement | null)[]>([])
   const fuentesRef = useRef<HTMLDivElement | null>(null)
+  const resumenRef = useRef<HTMLDivElement | null>(null)
 
-  const navegar = (destino: number | 'fuentes') => {
+  const navegar = (destino: number | 'fuentes' | 'resumen') => {
     setActivo(destino)
     if (typeof destino === 'number') {
       setCerradas((actual) => actual.filter((indice) => indice !== destino))
     }
 
     requestAnimationFrame(() => {
-      const objetivo = destino === 'fuentes' ? fuentesRef.current : referencias.current[destino]
+      const objetivo = destino === 'fuentes' ? fuentesRef.current : destino === 'resumen' ? resumenRef.current : referencias.current[destino]
       const contenedor = objetivo?.closest<HTMLElement>('.modal-contenido')
       if (objetivo && contenedor) {
         const delta = objetivo.getBoundingClientRect().top - contenedor.getBoundingClientRect().top
@@ -97,6 +99,9 @@ function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
           <div><span className="ficha-premium-eyebrow">GUÍA DE LECTURA</span><strong>En esta ficha</strong></div>
         </div>
         <nav className="ficha-premium-indice" aria-label="Ir a una sección">
+          <button type="button" className={'ficha-premium-indice-enlace ficha-premium-indice-resumen' + (activo === 'resumen' ? ' activo' : '')} aria-current={activo === 'resumen' ? 'location' : undefined} onClick={() => navegar('resumen')}>
+            <Icon name="activity" size={17}/><span>Vista rápida: tablas y algoritmos</span>
+          </button>
           {ficha.secciones.map((seccion, indice) => (
             <button
               type="button"
@@ -129,6 +134,9 @@ function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
             <p>Utiliza el índice para ir a una sección o despliega únicamente los apartados que quieras repasar.</p>
           </div>
           <div className="ficha-premium-contador"><strong>{ficha.secciones.length}</strong><span>apartados</span></div>
+        </div>
+        <div ref={resumenRef} className="ficha-premium-referencia" id="cad-resumen-visual">
+          <CADReferenciaRapida ficha={ficha} onIrASeccion={navegar}/>
         </div>
         <div className="ficha-premium-atajos">
           <span>IR DIRECTAMENTE A</span>
