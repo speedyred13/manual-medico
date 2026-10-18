@@ -177,7 +177,7 @@ function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
                 </h3>
                 <div className="ficha-premium-seccion-contenido" id={'cad-contenido-' + indice} hidden={!abierto}>
                   {seccion.texto && <p>{seccion.texto}</p>}
-                  {seccion.puntos && <ul>{seccion.puntos.map((punto, puntoIndice) => <li key={puntoIndice}>{punto}</li>)}</ul>}
+                  {seccion.puntos && <ul className={/tratamiento: secuencia práctica/i.test(seccion.titulo) ? 'ficha-premium-pasos' : /criterios diagnósticos/i.test(seccion.titulo) ? 'ficha-premium-criterios' : undefined}>{seccion.puntos.map((punto, puntoIndice) => <li key={puntoIndice}>{punto}</li>)}</ul>}
                 </div>
               </section>
             )
