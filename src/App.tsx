@@ -62,7 +62,7 @@ function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
   const [cerradas, setCerradas] = useState<number[]>([])
   const [activo, setActivo] = useState<number | 'fuentes'>(0)
   const referencias = useRef<(HTMLElement | null)[]>([])
-  const fuentesRef = useRef<HTMLElement | null>(null)
+  const fuentesRef = useRef<HTMLDivElement | null>(null)
 
   const navegar = (destino: number | 'fuentes') => {
     setActivo(destino)
