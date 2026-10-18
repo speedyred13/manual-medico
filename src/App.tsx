@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 
 import './App.css'
 import { temas } from './data/catalogo.ts'
@@ -44,7 +45,7 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
     compass: <><circle cx="12" cy="12" r="9"/><path d="m15.7 8.3-2.5 5-5 2.4 2.5-5 5-2.4Z"/></>,
     file: <><path d="M6 2h8l4 4v16H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M14 2v5h5M8 12h8M8 16h8"/></>,
     heart: <path d="M20.2 5.6a5.3 5.3 0 0 0-7.5 0l-.7.7-.7-.7a5.3 5.3 0 0 0-7.5 7.5 5.3 5.3 0 0 0 0 7.5L12 21l8.2-7.9a5.3 5.3 0 0 0 0-7.5Z"/>
-  } satisfies Record<IconName, React.ReactNode>
+  } satisfies Record<IconName, ReactNode>
 
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -205,8 +206,8 @@ function App() {
              <div className="sidebar-feature-top"><span className="sidebar-feature-icon"><Icon name="sparkles" size={18}/></span><span>CRECIMIENTO CONTINUO</span></div>
              <strong>Tu biblioteca médica,<br/>siempre a la mano.</strong>
              <p>Consulta, guarda y retoma los temas de cada rotación.</p>
-             <div className="sidebar-feature-progress"><span/></div>
-             <span className="sidebar-feature-small">76 temas · 14 especialidades</span>
+             <div className="sidebar-feature-progress"><span style={{ width: (Object.keys(fichasClinicas).length / temas.length) * 100 + '%' }}/></div>
+             <span className="sidebar-feature-small">{Object.keys(fichasClinicas).length} de {temas.length} fichas con contenido</span>
            </div>
            <div className="sidebar-footer"><Icon name="shield" size={16}/><span>Contenido para estudio clínico</span></div>
          </aside>
