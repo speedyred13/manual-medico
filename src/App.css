@@ -595,3 +595,154 @@ html { scroll-padding-top:92px; }
   .hero-floating { animation:none; }
   .app-sidebar,.quick-card,.tarjeta-tema,.dashboard-metrica,.sidebar-link { transition-duration:.01ms !important; }
 }
+
+
+/* Etapa 2 — Vista de prueba interactiva, exclusivamente para cetoacidosis diabética.
+   No afecta la estructura ni el contenido de las otras 75 fichas. */
+.modal.modal-interactivo {
+  width:min(1120px, calc(100vw - 32px));
+  max-height:min(94dvh, 980px);
+  border:1px solid color-mix(in srgb, var(--acento) 17%, var(--borde));
+  box-shadow:0 34px 110px rgba(4,20,50,.42);
+}
+.modal-interactivo .modal-cabecera { padding:17px 26px 10px; }
+.modal-interactivo .modal-intro {
+  position:relative; padding:22px 30px 25px; color:#fff; overflow:hidden;
+  background:linear-gradient(110deg,#0d2860 0%,#174a9b 69%,#2472d4 100%);
+  border-bottom:1px solid rgba(150,197,255,.3);
+}
+.modal-interactivo .modal-intro::after {
+  position:absolute; top:-94px; right:-65px; width:270px; height:270px; content:'';
+  border:1px solid rgba(236,245,255,.15); border-radius:50%;
+  box-shadow:0 0 0 39px rgba(236,245,255,.04),0 0 0 94px rgba(236,245,255,.025);
+  pointer-events:none;
+}
+.modal-interactivo .modal-intro h2,.modal-interactivo .modal-intro p { position:relative; z-index:1; color:#fff; }
+.modal-interactivo .modal-intro h2 { margin:10px 0 6px; font-size:clamp(24px,2.7vw,31px); letter-spacing:-.75px; }
+.modal-interactivo .modal-intro p { color:#cfe3ff; font-size:12px; line-height:1.6; }
+.modal-interactivo .modal-etiqueta { background:rgba(215,235,255,.14); color:#d1e9ff; border:1px solid rgba(211,233,255,.23); letter-spacing:1.25px; }
+:root[data-theme='oscuro'] .app .modal-interactivo .modal-intro h2 { color:#fff; }
+.modal-interactivo .modal-contenido { padding:0; background:var(--superficie); scrollbar-width:thin; }
+.modal-interactivo .modal-pie { padding:14px 24px; }
+
+.ficha-premium-layout { display:grid; grid-template-columns:250px minmax(0,1fr); align-items:start; min-width:0; }
+.ficha-premium-lado {
+  position:sticky; top:0; align-self:start; height:auto; max-height:calc(94dvh - 223px);
+  min-width:0; overflow-y:auto; overscroll-behavior:contain;
+  padding:23px 13px 18px 19px; border-right:1px solid var(--borde);
+  background:color-mix(in srgb,var(--superficie) 65%,var(--superficie-suave));
+  scrollbar-color:var(--borde) transparent; scrollbar-width:thin;
+}
+.ficha-premium-indice-cabecera { display:flex; align-items:center; gap:10px; padding:0 9px 17px; border-bottom:1px solid var(--borde); }
+.ficha-premium-indice-icono { display:grid; place-items:center; width:39px; height:39px; flex-shrink:0; color:var(--acento); border-radius:12px; background:var(--acento-suave); }
+.ficha-premium-indice-cabecera>div { display:grid; gap:4px; }
+.ficha-premium-eyebrow { color:var(--acento); font-size:9px; font-weight:800; letter-spacing:1.1px; }
+.ficha-premium-indice-cabecera strong { color:var(--texto); font:800 13px/1.3 Manrope,sans-serif; }
+.ficha-premium-indice { display:grid; gap:3px; padding:15px 0; }
+.ficha-premium-indice-enlace {
+  display:flex; align-items:center; gap:10px; min-height:41px; width:100%; padding:9px 10px;
+  border:1px solid transparent; border-radius:10px; text-align:left; background:transparent;
+  color:var(--texto-secundario); cursor:pointer; font-size:10px; line-height:1.5; font-weight:700;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.ficha-premium-indice-enlace>span:last-child { flex:1; min-width:0; }
+.ficha-premium-indice-enlace:hover { background:var(--acento-suave); color:var(--acento); }
+.ficha-premium-indice-enlace.activo { color:var(--acento); border-color:color-mix(in srgb,var(--acento) 15%,var(--borde)); background:var(--acento-suave); }
+.ficha-premium-numero { display:grid; place-items:center; flex:0 0 25px; height:25px; border-radius:7px; color:var(--texto-tenue); background:var(--superficie); font-size:9px; font-weight:800; }
+.ficha-premium-indice-enlace.activo .ficha-premium-numero { color:#fff; background:var(--acento); }
+.ficha-premium-indice-fuentes { margin-top:6px; border-top:1px solid var(--borde); border-radius:0 0 10px 10px; }
+.ficha-premium-indice-fuentes svg { flex:0 0 25px; }
+.ficha-premium-indice-pie { display:flex; align-items:flex-start; gap:8px; margin:11px 8px 0; padding-top:14px; border-top:1px solid var(--borde); color:var(--texto-tenue); font-size:9px; line-height:1.6; }
+.ficha-premium-indice-pie svg { flex-shrink:0; color:var(--acento); }
+
+.ficha-premium-body { min-width:0; padding:25px clamp(18px,3vw,34px) 28px; line-height:1.7; }
+.ficha-premium-metadata { display:flex; flex-direction:column; gap:7px; padding:15px 16px; border:1px solid var(--borde); border-radius:13px; background:color-mix(in srgb,var(--superficie) 56%,var(--superficie-suave)); }
+.ficha-premium-metadata>span { display:flex; align-items:flex-start; gap:8px; color:var(--texto-secundario); font-size:11px; line-height:1.6; }
+.ficha-premium-metadata svg { flex:0 0 16px; margin-top:1px; color:var(--acento); }
+.ficha-premium-metadata strong { color:var(--texto); white-space:nowrap; }
+.ficha-premium-bienvenida { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:23px 0 20px; }
+.ficha-premium-bienvenida h3 { margin:6px 0; color:var(--texto); font:800 clamp(19px,2vw,23px)/1.3 Manrope,sans-serif; letter-spacing:-.5px; }
+.ficha-premium-bienvenida p { max-width:520px; margin:6px 0 0; color:var(--texto-secundario); font-size:11px; line-height:1.7; }
+.ficha-premium-contador { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; min-width:80px; height:78px; border-radius:16px; border:1px solid var(--borde); background:var(--acento-suave); color:var(--acento); }
+.ficha-premium-contador strong { font:800 28px/1.2 Manrope,sans-serif; }
+.ficha-premium-contador span { font-size:9px; font-weight:800; }
+.ficha-premium-atajos { display:flex; align-items:center; flex-wrap:wrap; gap:7px; padding:12px 14px; border:1px solid var(--borde); border-radius:12px; background:var(--superficie); }
+.ficha-premium-atajos>span { margin-right:5px; color:var(--texto-tenue); font-size:9px; font-weight:800; letter-spacing:.7px; }
+.ficha-premium-atajos button { display:inline-flex; align-items:center; gap:7px; min-height:30px; padding:6px 10px; border:1px solid color-mix(in srgb,var(--acento) 14%,var(--borde)); border-radius:8px; background:var(--acento-suave); color:var(--acento); cursor:pointer; font-size:10px; font-weight:800; }
+.ficha-premium-atajos button:hover { border-color:var(--acento); }
+.ficha-premium-acciones { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:25px 0 12px; }
+.ficha-premium-acciones>span { display:inline-flex; align-items:center; gap:8px; color:var(--texto); font:800 13px Manrope,sans-serif; }
+.ficha-premium-acciones>span svg { color:var(--acento); }
+.ficha-premium-acciones>button { padding:7px 11px; border:1px solid var(--borde); border-radius:9px; background:var(--superficie); color:var(--acento); font-size:10px; font-weight:800; cursor:pointer; }
+.ficha-premium-acciones>button:hover { background:var(--acento-suave); }
+
+.ficha-premium-secciones { display:grid; gap:11px; }
+.ficha-premium-secciones .ficha-premium-seccion { min-width:0; margin:0; border:1px solid var(--borde); border-radius:13px; background:var(--superficie); box-shadow:0 5px 17px rgba(23,57,109,.035); scroll-margin-top:12px; overflow:hidden; }
+.ficha-premium-secciones .ficha-premium-seccion.abierta { border-color:color-mix(in srgb,var(--acento) 18%,var(--borde)); }
+.ficha-premium-secciones .ficha-premium-seccion h3 { margin:0; line-height:1.3; }
+.ficha-premium-toggle { display:flex; align-items:center; gap:13px; width:100%; min-height:64px; padding:12px 15px; text-align:left; background:transparent; border:0; color:var(--texto); cursor:pointer; }
+.ficha-premium-toggle:hover { background:color-mix(in srgb,var(--superficie) 55%,var(--superficie-suave)); }
+.ficha-premium-seccion-numero { display:grid; place-items:center; flex:0 0 36px; height:36px; border:1px solid var(--borde); border-radius:10px; background:var(--acento-suave); color:var(--acento); font:800 11px Manrope,sans-serif; }
+.ficha-premium-seccion-titulo { flex:1; min-width:0; font:800 13px/1.45 Manrope,sans-serif; color:var(--texto); }
+.ficha-premium-seccion-estado { display:grid; place-items:center; flex:0 0 27px; height:27px; border-radius:8px; background:var(--superficie-suave); color:var(--acento); transform:rotate(90deg); transition:transform .2s; }
+.ficha-premium-seccion:not(.abierta) .ficha-premium-seccion-estado { transform:rotate(0deg); }
+.ficha-premium-seccion-contenido { padding:0 19px 18px 64px; color:var(--texto-secundario); font-size:12px; line-height:1.77; }
+.ficha-premium-seccion-contenido[hidden] { display:none; }
+.ficha-premium-seccion-contenido>p { margin:0 0 12px; }
+.ficha-premium-seccion-contenido ul { margin:0; padding-left:18px; display:grid; gap:10px; }
+.ficha-premium-seccion-contenido li { padding-left:4px; }
+.ficha-premium-seccion-contenido li::marker { color:var(--acento); }
+.ficha-premium-bibliografia { margin:26px 0 0; padding:20px; border:1px solid var(--borde); border-radius:15px; background:color-mix(in srgb,var(--superficie) 77%,var(--superficie-suave)); }
+.ficha-premium-fuentes-encabezado { display:flex; align-items:center; gap:12px; margin-bottom:13px; }
+.ficha-premium-fuentes-icono { display:grid; place-items:center; width:41px; height:41px; border-radius:12px; color:var(--acento); background:var(--acento-suave); }
+.ficha-premium-fuentes-encabezado h3 { margin:4px 0 0; color:var(--texto); font:800 17px/1.3 Manrope,sans-serif; }
+.ficha-premium-bibliografia .fuentes-clinicas { margin:0; padding-left:18px; display:grid; gap:13px; }
+.ficha-premium-bibliografia .fuentes-clinicas li { min-width:0; }
+.ficha-premium-bibliografia .fuentes-clinicas a { display:inline-flex; flex-wrap:wrap; align-items:center; gap:7px; color:var(--acento); font-size:12px; font-weight:800; overflow-wrap:anywhere; }
+.ficha-premium-bibliografia .fuentes-clinicas a:hover { text-decoration:underline; }
+.ficha-premium-bibliografia .fuentes-clinicas a svg { flex-shrink:0; }
+.ficha-premium-bibliografia .fuentes-clinicas p { margin:3px 0 0; line-height:1.6; }
+.ficha-premium-nota { display:flex; align-items:flex-start; gap:10px; margin:17px 0 0; padding:15px; border:1px solid var(--borde); border-radius:11px; background:var(--superficie-suave); color:var(--texto-secundario); font-size:10px; line-height:1.7; }
+.ficha-premium-nota>svg { color:var(--acento); flex:0 0 16px; margin-top:2px; }
+.ficha-premium-nota strong { color:var(--texto); }
+
+@media(max-width:820px) {
+  .modal.modal-interactivo { width:min(96vw,820px); }
+  .ficha-premium-layout { grid-template-columns:200px minmax(0,1fr); }
+  .ficha-premium-lado { padding:16px 8px; }
+  .ficha-premium-body { padding:20px 17px; }
+  .ficha-premium-seccion-contenido { padding-left:19px; }
+  .ficha-premium-toggle { gap:9px; padding:12px; }
+  .ficha-premium-seccion-titulo { font-size:12px; }
+}
+@media(max-width:650px) {
+  .modal.modal-interactivo { width:100%; max-height:96dvh; border-radius:21px 21px 0 0; }
+  .modal-interactivo .modal-cabecera { padding:13px 17px 9px; }
+  .modal-interactivo .modal-intro { padding:17px 18px 19px; }
+  .modal-interactivo .modal-intro h2 { font-size:24px; }
+  .ficha-premium-layout { display:block; }
+  .ficha-premium-lado { position:sticky; z-index:2; top:0; width:100%; max-height:none; padding:10px 13px; border-right:0; border-bottom:1px solid var(--borde); background:color-mix(in srgb,var(--superficie) 95%,transparent); backdrop-filter:blur(12px); }
+  .ficha-premium-indice-cabecera,.ficha-premium-indice-pie { display:none; }
+  .ficha-premium-indice { display:flex; flex-wrap:nowrap; gap:5px; overflow-x:auto; padding:2px 0 5px; scrollbar-width:thin; }
+  .ficha-premium-indice-enlace { flex:0 0 auto; width:auto; max-width:190px; min-height:37px; gap:6px; padding:7px 9px; font-size:10px; white-space:nowrap; }
+  .ficha-premium-indice-enlace>span:last-child { overflow:hidden; text-overflow:ellipsis; }
+  .ficha-premium-numero { flex-basis:22px; height:22px; font-size:8px; }
+  .ficha-premium-indice-fuentes { margin-top:0; border-top:1px solid transparent; border-radius:9px; }
+  .ficha-premium-body { padding:17px 15px 23px; }
+  .ficha-premium-metadata { padding:12px; }
+  .ficha-premium-metadata>span { display:block; font-size:10px; }
+  .ficha-premium-metadata svg { display:none; }
+  .ficha-premium-metadata strong { margin-right:3px; }
+  .ficha-premium-bienvenida { padding-top:18px; }
+  .ficha-premium-bienvenida h3 { font-size:19px; }
+  .ficha-premium-bienvenida p { font-size:10px; }
+  .ficha-premium-contador { min-width:57px; height:66px; }
+  .ficha-premium-contador strong { font-size:23px; }
+  .ficha-premium-contador span { font-size:8px; }
+  .ficha-premium-atajos { padding:10px; }
+  .ficha-premium-atajos>span { width:100%; }
+  .ficha-premium-seccion-contenido { padding:0 13px 14px; }
+  .ficha-premium-seccion-contenido ul { padding-left:19px; }
+  .ficha-premium-bibliografia { padding:15px; }
+  .modal-interactivo .modal-pie { padding:12px 16px max(14px,env(safe-area-inset-bottom)); }
+}
