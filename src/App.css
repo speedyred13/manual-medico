@@ -746,3 +746,112 @@ html { scroll-padding-top:92px; }
   .ficha-premium-bibliografia { padding:15px; }
   .modal-interactivo .modal-pie { padding:12px 16px max(14px,env(safe-area-inset-bottom)); }
 }
+
+
+/* Vista CAD v2 — tablas, navegación y algoritmos derivados de src/data. */
+.ficha-premium-indice-resumen { margin-bottom:10px; border:1px solid color-mix(in srgb,var(--acento) 18%,var(--borde)); background:color-mix(in srgb,var(--acento-suave) 75%,var(--superficie)); color:var(--acento); }
+.ficha-premium-indice-resumen>svg { flex:0 0 23px; color:var(--acento); }
+.ficha-premium-referencia { margin:2px 0 20px; scroll-margin-top:90px; min-width:0; }
+
+.cad-rapida { min-width:0; overflow:hidden; border-radius:20px; border:1px solid color-mix(in srgb,var(--acento) 21%,var(--borde)); background:var(--superficie); box-shadow:0 14px 40px rgba(21,67,148,.09); }
+.cad-rapida-cabecera { display:flex; align-items:center; justify-content:space-between; gap:13px; padding:24px 25px 20px; position:relative; overflow:hidden; color:#fff; background:linear-gradient(115deg,#0d326e 0%,#1b4fa0 65%,#286bd0 100%); }
+.cad-rapida-cabecera::before { content:''; position:absolute; top:-75px; right:-30px; width:200px; height:200px; border-radius:50%; border:1px solid rgba(221,237,255,.24); box-shadow:0 0 0 26px rgba(255,255,255,.035),0 0 0 65px rgba(255,255,255,.025); pointer-events:none; }
+.cad-rapida-cabecera>div { min-width:0; position:relative; z-index:1; }
+.cad-rapida-eyebrow { display:inline-flex; align-items:center; gap:8px; color:#b9dbff; font:800 9px/1.5 'DM Sans',sans-serif; letter-spacing:1.35px; }
+.cad-rapida-luz { width:7px; height:7px; border-radius:50%; background:#79f5cc; box-shadow:0 0 0 4px rgba(121,245,204,.13); }
+.cad-rapida-cabecera h3 { margin:8px 0 5px; font:800 clamp(18px,2vw,24px)/1.24 Manrope,sans-serif; color:#fff; letter-spacing:-.55px; }
+.cad-rapida-cabecera p { max-width:480px; margin:0; color:#d6e6ff; font:500 11px/1.7 'DM Sans',sans-serif; }
+.cad-rapida-icono { display:grid; place-items:center; z-index:1; flex:0 0 48px; width:48px; height:48px; color:#fff; border:1px solid rgba(222,242,255,.34); border-radius:15px; background:rgba(246,253,255,.12); box-shadow:inset 0 1px 0 rgba(255,255,255,.16); }
+.cad-rapida-pestañas { display:flex; gap:5px; overflow-x:auto; padding:10px 12px; border-bottom:1px solid var(--borde); background:color-mix(in srgb,var(--superficie) 68%,var(--superficie-suave)); scrollbar-width:thin; scrollbar-color:var(--borde) transparent; }
+.cad-rapida-pestaña { display:inline-flex; align-items:center; justify-content:center; gap:8px; flex:1 0 auto; min-height:41px; padding:9px 10px; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--texto-secundario); white-space:nowrap; font:800 10px/1.4 'DM Sans',sans-serif; cursor:pointer; transition:background .2s,color .2s,box-shadow .2s,border-color .2s; }
+.cad-rapida-pestaña>span { display:grid; place-items:center; flex:0 0 23px; width:23px; height:23px; border-radius:7px; background:color-mix(in srgb,var(--superficie-suave) 90%,var(--borde)); color:var(--texto-tenue); font-size:9px; }
+.cad-rapida-pestaña:hover { color:var(--acento); background:var(--acento-suave); }
+.cad-rapida-pestaña.seleccionada { color:var(--acento); background:var(--superficie); border-color:color-mix(in srgb,var(--acento) 19%,var(--borde)); box-shadow:0 4px 17px rgba(18,57,118,.06); }
+.cad-rapida-pestaña.seleccionada>span { color:#fff; background:var(--acento); }
+.cad-rapida-panel { min-width:0; }
+.cad-rapida-vista { min-width:0; padding:21px 22px 24px; }
+.cad-rapida-vista-cabecera { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:17px; }
+.cad-rapida-kicker { color:var(--acento); font:800 9px/1.5 'DM Sans',sans-serif; letter-spacing:1.15px; }
+.cad-rapida-vista-cabecera h4 { margin:5px 0 0; color:var(--texto); font:800 18px/1.38 Manrope,sans-serif; letter-spacing:-.3px; }
+.cad-rapida-vista-cabecera>button,.cad-rapida-subtitulo>button { display:inline-flex; align-items:center; gap:8px; flex:0 0 auto; min-height:33px; padding:7px 10px; border:1px solid var(--borde); border-radius:9px; background:var(--superficie); color:var(--acento); font:800 10px/1.3 'DM Sans',sans-serif; cursor:pointer; }
+.cad-rapida-vista-cabecera>button:hover,.cad-rapida-subtitulo>button:hover { background:var(--acento-suave); border-color:var(--acento); }
+.cad-criterios-cadena { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 19px; }
+.cad-criterio-posicion { position:relative; min-width:0; }
+.cad-criterio-tarjeta { height:100%; min-width:0; padding:15px 13px; border:1px solid var(--borde); border-radius:13px; background:linear-gradient(140deg,var(--superficie) 40%,var(--superficie-suave)); box-shadow:0 5px 16px rgba(16,46,107,.04); }
+.cad-criterio-numero { display:grid; place-items:center; width:31px; height:31px; margin-bottom:10px; border-radius:9px; background:var(--acento-suave); color:var(--acento); font:800 11px Manrope,sans-serif; }
+.cad-criterio-tarjeta strong { display:block; margin-bottom:7px; color:var(--texto); font:800 11px/1.5 Manrope,sans-serif; overflow-wrap:anywhere; }
+.cad-criterio-tarjeta p { margin:0; color:var(--texto-secundario); font:500 10px/1.7 'DM Sans',sans-serif; overflow-wrap:anywhere; }
+.cad-criterios-y { position:absolute; top:45%; right:-13px; z-index:2; display:grid; place-items:center; width:26px; height:26px; border:2px solid var(--superficie); border-radius:50%; background:var(--acento); color:#fff; font:800 9px Manrope,sans-serif; box-shadow:0 5px 10px rgba(20,64,135,.17); }
+
+.cad-tabla-scroll { overflow-x:auto; overscroll-behavior-x:contain; border:1px solid var(--borde); border-radius:13px; scrollbar-width:thin; }
+.cad-tabla { width:100%; min-width:475px; border-spacing:0; border-collapse:separate; color:var(--texto); text-align:left; font-size:11px; line-height:1.7; }
+.cad-tabla thead { background:var(--acento-suave); color:var(--acento); }
+.cad-tabla th,.cad-tabla td { padding:12px 13px; border-bottom:1px solid var(--borde); vertical-align:top; overflow-wrap:anywhere; }
+.cad-tabla thead th { font:800 10px/1.4 Manrope,sans-serif; letter-spacing:.25px; }
+.cad-tabla tbody th { width:35%; color:var(--texto); font:800 11px/1.6 Manrope,sans-serif; }
+.cad-tabla tbody td { color:var(--texto-secundario); }
+.cad-tabla tbody tr:last-child th,.cad-tabla tbody tr:last-child td { border-bottom:0; }
+.cad-tabla tbody tr:nth-child(even) { background:color-mix(in srgb,var(--superficie) 77%,var(--superficie-suave)); }
+.cad-rapida-nota { display:flex; align-items:flex-start; gap:10px; margin:15px 0 0; padding:12px 14px; border:1px solid color-mix(in srgb,var(--acento) 16%,var(--borde)); border-radius:10px; background:var(--acento-suave); color:var(--texto-secundario); font-size:10px; line-height:1.7; }
+.cad-rapida-nota>span:first-child { display:grid; place-items:center; flex:0 0 18px; width:18px; height:18px; border-radius:50%; background:var(--acento); color:#fff; font:800 11px 'DM Sans',sans-serif; }
+
+.cad-rapida-advertencia { display:flex; align-items:flex-start; gap:12px; margin:0 0 17px; padding:13px 15px; border:1px solid color-mix(in srgb,#e0ad54 55%,var(--borde)); border-radius:12px; background:color-mix(in srgb,#f3b958 10%,var(--superficie)); color:var(--texto); font-size:11px; line-height:1.7; }
+.cad-rapida-advertencia>span:first-child { display:grid; place-items:center; flex:0 0 26px; height:26px; border-radius:9px; background:#f1d49c; color:#76500d; font:800 15px Manrope,sans-serif; }
+.cad-algoritmo { position:relative; display:grid; gap:11px; margin-left:3px; }
+.cad-algoritmo::before { position:absolute; content:''; width:2px; top:28px; bottom:25px; left:19px; background:linear-gradient(to bottom,#408df1,#89baff,#b5d4ff); opacity:.8; pointer-events:none; }
+.cad-algoritmo-paso { position:relative; z-index:1; display:grid; grid-template-columns:41px minmax(0,1fr); gap:11px; align-items:start; min-width:0; }
+.cad-algoritmo-marca { display:grid; place-items:center; width:40px; height:40px; border:4px solid var(--superficie); border-radius:13px; color:white; background:linear-gradient(140deg,#397ce3,#1647ad); box-shadow:0 5px 15px rgba(24,85,174,.18); font:800 11px Manrope,sans-serif; }
+.cad-algoritmo-tarjeta { min-width:0; padding:14px 16px; border:1px solid var(--borde); border-radius:13px; background:color-mix(in srgb,var(--superficie) 89%,var(--superficie-suave)); }
+.cad-algoritmo-etiqueta { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:7px; }
+.cad-algoritmo-etiqueta strong { color:var(--texto); font:800 12px/1.45 Manrope,sans-serif; }
+.cad-algoritmo-etiqueta>span { flex:0 0 auto; color:var(--acento); font-size:9px; letter-spacing:1px; font-weight:800; }
+.cad-algoritmo-tarjeta>p { margin:0; color:var(--texto-secundario); font-size:11px; line-height:1.8; overflow-wrap:anywhere; }
+.cad-rapida-pie { margin-top:16px; color:var(--texto-tenue); font-size:10px; line-height:1.65; }
+.cad-tabla-vigilancia tbody th { width:58px; color:var(--acento); }
+.cad-rapida-subtitulo { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:25px 0 13px; }
+.cad-rapida-subtitulo h5 { margin:0; color:var(--texto); font:800 14px/1.35 Manrope,sans-serif; }
+.cad-resolucion-lista { display:grid; gap:8px; }
+.cad-resolucion-item { display:flex; align-items:flex-start; gap:12px; padding:11px 13px; border:1px solid var(--borde); border-radius:10px; background:var(--superficie); }
+.cad-resolucion-item>span { display:grid; place-items:center; flex:0 0 28px; width:28px; height:28px; border-radius:8px; color:var(--acento); background:var(--acento-suave); font:800 10px Manrope,sans-serif; }
+.cad-resolucion-item p { margin:0; color:var(--texto-secundario); font-size:11px; line-height:1.7; }
+.cad-alertas-grid { display:grid; gap:10px; }
+.cad-alerta { display:flex; align-items:flex-start; gap:12px; padding:13px; border:1px solid color-mix(in srgb,#d4a14c 25%,var(--borde)); border-radius:10px; background:color-mix(in srgb,#f2ce81 7%,var(--superficie)); color:var(--texto-secundario); font-size:11px; line-height:1.7; }
+.cad-alerta-marca { display:grid; place-items:center; flex:0 0 27px; height:27px; border-radius:9px; background:#f2ddb0; color:#845f20; font:800 14px Manrope,sans-serif; }
+.ficha-premium-seccion:has(.ficha-premium-pasos) { border-color:color-mix(in srgb,var(--acento) 24%,var(--borde)); }
+.ficha-premium-pasos li { margin-bottom:2px; padding:8px 11px; border-left:3px solid var(--acento); border-radius:0 8px 8px 0; background:color-mix(in srgb,var(--superficie) 65%,var(--superficie-suave)); }
+.ficha-premium-criterios li { margin-bottom:2px; padding:8px 10px; border-radius:8px; background:color-mix(in srgb,var(--superficie) 64%,var(--superficie-suave)); }
+
+@media(max-width:860px) {
+  .cad-rapida-pestaña { font-size:9px; padding-inline:7px; }
+  .cad-rapida-pestaña>span { flex-basis:20px; width:20px; height:20px; }
+  .cad-criterios-cadena { gap:9px; }
+  .cad-criterio-tarjeta { padding:12px 10px; }
+}
+@media(max-width:650px) {
+  .ficha-premium-referencia { scroll-margin-top:80px; }
+  .cad-rapida { border-radius:15px; }
+  .cad-rapida-cabecera { padding:18px 17px; }
+  .cad-rapida-cabecera h3 { font-size:20px; }
+  .cad-rapida-cabecera p { font-size:10px; }
+  .cad-rapida-icono { width:37px; height:37px; flex-basis:37px; }
+  .cad-rapida-icono svg { width:22px; height:22px; }
+  .cad-rapida-pestañas { padding:7px; }
+  .cad-rapida-pestaña { min-height:40px; font-size:10px; }
+  .cad-rapida-vista { padding:17px 13px 19px; }
+  .cad-rapida-vista-cabecera { flex-wrap:wrap; gap:10px; }
+  .cad-rapida-vista-cabecera h4 { font-size:17px; }
+  .cad-criterios-cadena { grid-template-columns:1fr; gap:9px; }
+  .cad-criterio-posicion { padding-bottom:0; }
+  .cad-criterio-tarjeta { padding:13px; }
+  .cad-criterio-numero { margin-bottom:5px; }
+  .cad-criterios-y { top:auto; bottom:-17px; right:auto; left:45%; width:24px; height:24px; }
+  .cad-criterio-tarjeta p { font-size:11px; }
+  .cad-rapida-advertencia { font-size:10px; }
+  .cad-algoritmo-tarjeta { padding:12px; }
+  .cad-algoritmo-etiqueta>span { font-size:8px; }
+  .cad-resolucion-item { padding:10px; }
+  .cad-rapida-subtitulo { flex-wrap:wrap; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .cad-rapida-pestaña { transition:none !important; }
+}
