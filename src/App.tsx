@@ -306,6 +306,24 @@ function App() {
 
    const [seleccionado, setSeleccionado] = useState<(typeof temas)[number] | null>(null)
 
+   const [favoritos, setFavoritos] = useState<string[]>(() => {
+     try { return JSON.parse(localStorage.getItem('manual-medico-favoritos') || '[]') as string[] } catch { return [] }
+   })
+   const [recientes, setRecientes] = useState<string[]>(() => {
+     try { return JSON.parse(localStorage.getItem('manual-medico-recientes') || '[]') as string[] } catch { return [] }
+   })
+   useEffect(() => { try { localStorage.setItem('manual-medico-favoritos', JSON.stringify(favoritos)) } catch { /* opcional */ } }, [favoritos])
+   useEffect(() => { try { localStorage.setItem('manual-medico-recientes', JSON.stringify(recientes)) } catch { /* opcional */ } }, [recientes])
+   const abrirFicha = (tema: (typeof temas)[number]) => {
+     setSeleccionado(tema)
+     setRecientes((actual) => [tema.nombre, ...actual.filter((nombre) => nombre !== tema.nombre)].slice(0, 5))
+   }
+   const alternarFavorito = (nombre: string) => setFavoritos((actual) => actual.includes(nombre) ? actual.filter((item) => item !== nombre) : [...actual, nombre])
+   const abrirPorNombre = (nombre: string) => {
+     const tema = temas.find((item) => item.nombre === nombre)
+     if (tema) abrirFicha(tema)
+   }
+
    const resultados = useMemo(() => {
 
      const termino = busqueda.trim().toLocaleLowerCase()
@@ -356,12 +374,30 @@ function App() {
          </div>
        </section>
 
+       <section className="dashboard shell" aria-label="Panel de inicio">
+         <div className="dashboard-titulo"><div><span className="sobretitulo">TU PANEL DE ESTUDIO</span><h2>Tu biblioteca, de un vistazo</h2><p>Retoma tus consultas y guarda los temas que más utilizas.</p></div><span className="dashboard-distintivo">Panel interactivo</span></div>
+         <div className="dashboard-metricas">
+           <div className="metrica"><span>Temas disponibles</span><strong>{temas.length}</strong><small>Catálogo de consulta</small></div>
+           <div className="metrica"><span>Especialidades</span><strong>{especialidades.length - 1}</strong><small>Áreas clínicas</small></div>
+           <div className="metrica"><span>Fichas con contenido</span><strong>{Object.keys(fichasClinicas).length}</strong><small>Las demás están en desarrollo</small></div>
+           <div className="metrica"><span>Mis favoritos</span><strong>{favoritos.length}</strong><small>Guardados en este navegador</small></div>
+         </div>
+         <div className="dashboard-paneles">
+           <div className="dashboard-panel"><div className="dashboard-panel-cabecera"><h3>★ Mis favoritos</h3><span>{favoritos.length} guardados</span></div>
+             {favoritos.length ? <div className="dashboard-enlaces">{favoritos.map((nombre) => <button key={nombre} type="button" onClick={() => abrirPorNombre(nombre)}>{nombre}<span>↗</span></button>)}</div> : <p className="dashboard-ayuda">Guarda una ficha con la estrella de su tarjeta para acceder rápidamente.</p>}
+           </div>
+           <div className="dashboard-panel"><div className="dashboard-panel-cabecera"><h3>↗ Consultas recientes</h3><span>Últimas 5</span></div>
+             {recientes.length ? <div className="dashboard-enlaces">{recientes.map((nombre) => <button key={nombre} type="button" onClick={() => abrirPorNombre(nombre)}>{nombre}<span>↗</span></button>)}</div> : <p className="dashboard-ayuda">Las fichas que abras aparecerán aquí automáticamente.</p>}
+           </div>
+         </div>
+       </section>
+
        <section className="seccion shell seccion-especialidades"><div className="titulo-seccion"><div><span className="sobretitulo">NAVEGACIÓN</span><h2>Explora por especialidad</h2><p>Selecciona un área para encontrar los temas relacionados.</p></div></div>
          <div className="filtros">{especialidades.map((item, indice) => <button key={item} className={`filtro ${especialidad === item ? 'activo' : ''}`} onClick={() => setEspecialidad(item)} aria-pressed={especialidad === item}><span className="filtro-icono">{indice === 0 ? '▦' : '✳'}</span>{item}</button>)}</div>
        </section>
 
        <section className="seccion shell biblioteca"><div className="titulo-seccion titulo-biblioteca"><div><span className="sobretitulo">CONTENIDO CLÍNICO</span><h2>Biblioteca médica</h2><p>Abre una ficha para consultar el contenido disponible y sus referencias.</p></div><span className="contador"><strong>{resultados.length}</strong> {resultados.length === 1 ? 'tema' : 'temas'}</span></div>
-         <div className="lista-temas">{resultados.map((tema, indice) => <button className="tarjeta-tema" key={tema.nombre} onClick={() => setSeleccionado(tema)}><span className="icono-tema" aria-hidden="true"><span>{String(indice + 1).padStart(2, '0')}</span><b>↗</b></span><span className="contenido-tema"><span className="categoria">{tema.especialidad}</span><strong>{tema.nombre}</strong><span className="resumen">{tema.resumen}</span></span><span className="flecha" aria-hidden="true">↗</span></button>)}
+         <div className="lista-temas">{resultados.map((tema, indice) => <div className="tarjeta-contenedor" key={tema.nombre}><button className="tarjeta-tema" onClick={() => abrirFicha(tema)}><span className="icono-tema" aria-hidden="true"><span>{String(indice + 1).padStart(2, '0')}</span><b>↗</b></span><span className="contenido-tema"><span className="categoria">{tema.especialidad}</span><strong>{tema.nombre}</strong><span className="resumen">{tema.resumen}</span></span><span className="flecha" aria-hidden="true">↗</span></button><button type="button" className={`favorito-boton ${favoritos.includes(tema.nombre) ? 'es-favorito' : ''}`} aria-label={`${favoritos.includes(tema.nombre) ? 'Quitar de' : 'Agregar a'} favoritos: ${tema.nombre}`} aria-pressed={favoritos.includes(tema.nombre)} title={favoritos.includes(tema.nombre) ? 'Quitar de favoritos' : 'Agregar a favoritos'} onClick={() => alternarFavorito(tema.nombre)}>{favoritos.includes(tema.nombre) ? '★' : '☆'}</button></div>)}
            {resultados.length === 0 && <div className="vacio"><span>⌕</span><strong>No encontramos resultados</strong><p>Prueba con otra palabra o selecciona “Todas” las especialidades.</p><button type="button" onClick={() => { setBusqueda(''); setEspecialidad('Todas') }}>Limpiar filtros</button></div>}
          </div>
        </section>
