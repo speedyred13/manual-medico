@@ -23,7 +23,13 @@ test('las 76 fichas abren completas, se leen y regresan sin errores', async ({ p
     await page.locator('.tarjeta-tema').nth(indice).click()
     const pantalla = esCAD ? page.locator('#cad-pagina') : page.getByRole('dialog')
     await expect(pantalla.getByRole('heading', { name: tema.nombre, exact: true })).toBeVisible()
-    await expect(pantalla.locator(esCAD ? '.ficha-premium-seccion' : '.ficha-clinica section')).toHaveCount(ficha.secciones.length)
+    if (esCAD) {
+      await expect(pantalla.getByRole('navigation', { name: 'Apartados de la ficha' }).locator('button')).toHaveCount(ficha.secciones.length + 1)
+      await expect(pantalla.locator('.cad-unica-seccion')).toHaveCount(1)
+      await pantalla.getByRole('navigation', { name: 'Apartados de la ficha' }).getByRole('button', { name: 'Bibliografía' }).click()
+    } else {
+      await expect(pantalla.locator('.ficha-clinica section')).toHaveCount(ficha.secciones.length)
+    }
     await expect(pantalla.locator('.fuentes-clinicas a')).toHaveCount(ficha.fuentes.length)
     await expect(pantalla.getByText('Ficha en desarrollo y verificación')).toHaveCount(0)
     for (const enlace of await pantalla.locator('.fuentes-clinicas a').all()) {
@@ -85,117 +91,107 @@ test('claro y oscuro persisten y mantienen ventanas utilizables', async ({ page 
 })
 
 
-test('CAD abre página completa, conserva el contenido y permite regresar', async ({ page }, testInfo) => {
+test('CAD muestra diez botones independientes, sin textos destacados ni índice extra', async ({ page }, testInfo) => {
   const ficha = fichasClinicas['Cetoacidosis diabética']
   await page.goto('/')
   await page.getByRole('button', { name: 'Abrir ficha destacada' }).click()
-  const lector = page.locator('#cad-pagina')
-  await expect(lector).toBeVisible()
-  await expect(page.getByRole('dialog')).toHaveCount(0)
+
+  const pantalla = page.locator('#cad-pagina')
+  await expect(pantalla).toBeVisible()
   await expect(page).toHaveURL(/#\/ficha\/cetoacidosis-diabetica$/)
-  await expect(lector.getByRole('heading', { name: 'Cetoacidosis diabética' })).toBeVisible()
-  await expect(lector.locator('.ficha-premium-seccion')).toHaveCount(ficha.secciones.length)
-  await expect(lector.locator('.fuentes-clinicas a')).toHaveCount(ficha.fuentes.length)
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(pantalla.getByRole('heading', { name: 'Cetoacidosis diabética' })).toBeVisible()
+  await expect(pantalla.locator('.cad-pagina-descripcion, .cad-pagina-datos, .cad-reader-movil, .cad-reader-aside')).toHaveCount(0)
+  await expect(pantalla.getByText('Índice de contenidos')).toHaveCount(0)
+  await expect(pantalla.getByText('¿Qué necesitas consultar?')).toHaveCount(0)
+  await expect(pantalla.getByText('Ir a la ficha completa')).toHaveCount(0)
+  await expect(pantalla.getByText('Precauciones clínicas: errores que evitar')).toHaveCount(0)
 
-  const primera = lector.locator('.ficha-premium-seccion').first()
-  const botonPrimero = primera.getByRole('button', { name: /Definición y fisiopatología/i })
-  await expect(botonPrimero).toHaveAttribute('aria-expanded', 'true')
-  await botonPrimero.click()
-  await expect(botonPrimero).toHaveAttribute('aria-expanded', 'false')
-  await expect(primera.locator('.ficha-premium-seccion-contenido')).toBeHidden()
-  await botonPrimero.click()
-  await expect(botonPrimero).toHaveAttribute('aria-expanded', 'true')
+  const navegacion = pantalla.getByRole('navigation', { name: 'Apartados de la ficha' })
+  await expect(navegacion.locator('button')).toHaveCount(ficha.secciones.length + 1)
+  const etiquetas = ['Definición y fisiopatología', 'Desencadenantes', 'Diagnóstico', 'Evaluación inicial', 'Gravedad', 'Tratamiento', 'Monitorización', 'Resolución', 'Errores frecuentes', 'Bibliografía']
+  for (const etiqueta of etiquetas) await expect(navegacion.getByRole('button', { name: etiqueta, exact: true })).toHaveCount(1)
+  await expect(navegacion.getByRole('button', { name: 'Diagnóstico' })).toHaveAttribute('aria-pressed', 'true')
 
-  await lector.getByRole('button', { name: 'Contraer todas' }).click()
-  await expect(lector.locator('.ficha-premium-seccion button[aria-expanded="false"]')).toHaveCount(ficha.secciones.length)
-  await lector.getByRole('button', { name: 'Expandir todas' }).click()
-  await expect(lector.locator('.ficha-premium-seccion button[aria-expanded="true"]')).toHaveCount(ficha.secciones.length)
+  // Cada botón muestra exclusivamente su apartado original, con todos sus datos.
+  for (let indice = 0; indice < ficha.secciones.length; indice++) {
+    const seccion = ficha.secciones[indice]
+    await navegacion.locator('button').nth(indice).click()
+    const contenido = pantalla.locator('.cad-unica-seccion')
+    await expect(contenido).toHaveCount(1)
+    await expect(contenido.getByRole('heading', { name: seccion.titulo, exact: true })).toBeVisible()
+    if (seccion.texto) await expect(contenido).toContainText(seccion.texto)
 
-  const indiceEscritorio = lector.getByRole('navigation', { name: 'Ir a una sección' })
-  if (testInfo.project.name === 'movil') {
-    await lector.locator('.cad-reader-movil summary').click()
-    const indiceMovil = lector.getByRole('navigation', { name: 'Índice de la ficha en móvil' })
-    await expect(indiceMovil).toBeVisible()
-    await indiceMovil.getByRole('button', { name: /Bibliografía y guías/ }).click()
-    await expect(lector.locator('.cad-reader-movil')).not.toHaveAttribute('open', '')
-  } else {
-    await indiceEscritorio.getByRole('button', { name: /Bibliografía y guías/ }).click()
+    if (/criterios diagnósticos/i.test(seccion.titulo)) {
+      const tabla = contenido.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' })
+      await expect(tabla.locator('tbody tr')).toHaveCount(3)
+      for (const criterio of seccion.puntos?.slice(0, 3) ?? []) {
+        const separador = criterio.indexOf(':')
+        await expect(tabla).toContainText(criterio.slice(0, separador).trim())
+        await expect(tabla).toContainText(criterio.slice(separador + 1).trim())
+      }
+      for (const nota of seccion.puntos?.slice(3) ?? []) await expect(contenido).toContainText(nota)
+    } else if (/tratamiento: secuencia práctica/i.test(seccion.titulo)) {
+      await expect(contenido.locator('.cad-algoritmo-paso')).toHaveCount(seccion.puntos?.length ?? 0)
+      for (const punto of seccion.puntos ?? []) {
+        const partes = /^\d+\)\s*([^:]+):\s*(.*)$/.exec(punto)
+        expect(partes).not.toBeNull()
+        await expect(contenido).toContainText(partes![2])
+        await expect(contenido).toContainText(partes![3])
+      }
+      await contenido.getByRole('button', { name: 'Tabla', exact: true }).click()
+      const tabla = contenido.getByRole('table', { name: 'Tabla de tratamiento de cetoacidosis' })
+      await expect(tabla.locator('tbody tr')).toHaveCount(seccion.puntos?.length ?? 0)
+    } else {
+      for (const punto of seccion.puntos ?? []) await expect(contenido).toContainText(punto)
+    }
   }
-  await expect(lector.getByRole('heading', { name: 'Bibliografía y guías' })).toBeVisible()
-  await lector.getByRole('button', { name: 'Volver al manual' }).click()
-  await expect(lector).toHaveCount(0)
 
+  // La bibliografía conserva todos sus títulos, enlaces y anotaciones.
+  await navegacion.getByRole('button', { name: 'Bibliografía', exact: true }).click()
+  const fuentes = pantalla.locator('.fuentes-clinicas a')
+  await expect(fuentes).toHaveCount(ficha.fuentes.length)
+  for (const fuente of ficha.fuentes) {
+    const enlace = pantalla.getByRole('link', { name: fuente.titulo })
+    await expect(enlace).toHaveAttribute('href', fuente.url)
+    await expect(pantalla).toContainText(fuente.nota)
+  }
+
+  await pantalla.getByRole('button', { name: 'Anterior' }).click()
+  await expect(navegacion.getByRole('button', { name: 'Errores frecuentes' })).toHaveAttribute('aria-pressed', 'true')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
+  if (testInfo.project.name === 'movil') {
+    await navegacion.getByRole('button', { name: 'Diagnóstico' }).click()
+    await expect(pantalla.locator('.cad-unica .cad-tabla-scroll')).toHaveCSS('overflow-x', 'visible')
+  }
+  await page.screenshot({ path: testInfo.outputPath('cad-apartados-independientes.png'), fullPage: true, animations: 'disabled' })
+
+  await pantalla.getByRole('button', { name: 'Volver al manual' }).click()
+  await expect(pantalla).toHaveCount(0)
   await page.goto('/#/ficha/cetoacidosis-diabetica')
   await expect(page.locator('#cad-pagina')).toBeVisible()
   await page.locator('#cad-pagina').getByRole('button', { name: 'Volver al manual' }).click()
   await expect(page.locator('#cad-pagina')).toHaveCount(0)
 })
 
-test('CAD conserva cifras, algoritmo y tabla derivados del texto original', async ({ page }, testInfo) => {
-  const ficha = fichasClinicas['Cetoacidosis diabética']
-  const criterios = ficha.secciones.find(s => /criterios diagnósticos/i.test(s.titulo))?.puntos ?? []
-  const tratamiento = ficha.secciones.find(s => /tratamiento: secuencia práctica/i.test(s.titulo))?.puntos ?? []
-  const monitorizacion = ficha.secciones.find(s => /monitorización durante tratamiento/i.test(s.titulo))?.puntos ?? []
-  const resolucion = ficha.secciones.find(s => /resolución y transición/i.test(s.titulo))?.puntos ?? []
-  const errores = ficha.secciones.find(s => /errores clínicos/i.test(s.titulo))?.puntos ?? []
-
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Abrir ficha destacada' }).click()
+test('CAD: diagnóstico, tratamiento, monitorización y resolución no se agrupan', async ({ page }) => {
+  await page.goto('/#/ficha/cetoacidosis-diabetica')
   const pantalla = page.locator('#cad-pagina')
-  const panel = pantalla.locator('.cad-rapida')
-  await expect(panel).toBeVisible()
-  await expect(panel.locator('.cad-criterio-tarjeta')).toHaveCount(0)
-  const tablaDiagnostico = panel.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' })
-  await expect(tablaDiagnostico.locator('tbody tr')).toHaveCount(3)
-  for (const criterio of criterios.slice(0, 3)) {
-    const separador = criterio.indexOf(':')
-    const etiqueta = criterio.slice(0, separador).trim()
-    const contenido = criterio.slice(separador + 1).trim()
-    await expect(tablaDiagnostico).toContainText(etiqueta)
-    await expect(tablaDiagnostico).toContainText(contenido)
-  }
+  const navegacion = pantalla.getByRole('navigation', { name: 'Apartados de la ficha' })
 
-  const navegacion = panel.getByRole('group', { name: 'Vista rápida de cetoacidosis' })
-  await navegacion.getByRole('button', { name: 'Tratamiento' }).click()
-  await expect(panel.locator('.cad-algoritmo-paso')).toHaveCount(tratamiento.length)
-  for (let indice = 0; indice < tratamiento.length; indice++) {
-    const match = /^\d+\)\s*([^:]+):\s*(.*)$/.exec(tratamiento[indice])
-    expect(match).not.toBeNull()
-    await expect(panel.locator('.cad-algoritmo-paso').nth(indice).locator('.cad-algoritmo-etiqueta')).toContainText(match![1])
-    await expect(panel.locator('.cad-algoritmo-paso').nth(indice).locator('p')).toContainText(match![2])
-  }
-  await panel.getByRole('button', { name: 'Tabla terapéutica' }).click()
-  const tablaTratamiento = panel.getByRole('table', { name: 'Tabla de tratamiento de cetoacidosis' })
-  await expect(tablaTratamiento.locator('tbody tr')).toHaveCount(tratamiento.length)
-  for (const punto of tratamiento) {
-    const match = /^\d+\)\s*([^:]+):\s*(.*)$/.exec(punto)
-    expect(match).not.toBeNull()
-    await expect(tablaTratamiento).toContainText(match![1])
-    await expect(tablaTratamiento).toContainText(match![2])
-  }
+  await expect(pantalla.locator('.cad-unica-seccion').getByRole('heading')).toHaveText(/criterios diagnósticos/i)
+  await navegacion.getByRole('button', { name: 'Monitorización' }).click()
+  await expect(pantalla.getByRole('table', { name: 'Tabla de monitorización durante el tratamiento' })).toBeVisible()
+  await expect(pantalla.getByRole('heading', { name: 'Resolución y transición' })).toHaveCount(0)
 
-  await navegacion.getByRole('button', { name: 'Seguimiento' }).click()
-  await expect(panel.getByRole('table', { name: 'Tabla de monitorización durante el tratamiento' }).locator('tbody tr')).toHaveCount(monitorizacion.length)
-  await expect(panel.locator('.cad-resolucion-item')).toHaveCount(resolucion.length)
-  await panel.getByRole('button', { name: /Precauciones clínicas: errores que evitar/ }).click()
-  await expect(panel.locator('.cad-alerta')).toHaveCount(errores.length)
+  await navegacion.getByRole('button', { name: 'Resolución', exact: true }).click()
+  await expect(pantalla.getByRole('heading', { name: 'Resolución y transición' })).toBeVisible()
+  await expect(pantalla.getByRole('table', { name: 'Tabla de monitorización durante el tratamiento' })).toHaveCount(0)
 
-  for (let indice = 0; indice < ficha.secciones.length; indice++) {
-    const contenido = pantalla.locator('.ficha-premium-seccion').nth(indice).locator('.ficha-premium-seccion-contenido')
-    const seccion = ficha.secciones[indice]
-    if (seccion.texto) await expect(contenido).toContainText(seccion.texto)
-    for (const punto of seccion.puntos ?? []) await expect(contenido).toContainText(punto)
-  }
-  await expect(pantalla.locator('.fuentes-clinicas a')).toHaveCount(ficha.fuentes.length)
-  await navegacion.getByRole('button', { name: /Diagnóstico/ }).click()
-  await pantalla.getByRole('button', { name: /Ir a la ficha completa/ }).click()
-  await expect(pantalla.locator('.ficha-premium-seccion').first().getByRole('button')).toHaveAttribute('aria-expanded', 'true')
-  await pantalla.locator('.cad-reader-resumen').scrollIntoViewIfNeeded()
-  await page.screenshot({ path: testInfo.outputPath('cad-pagina-completa.png'), fullPage: true, animations: 'disabled' })
-  if (testInfo.project.name === 'movil') {
-    await expect(navegacion.getByRole('button')).toHaveCount(3)
-    await expect(panel.locator('.cad-tabla-scroll').first()).toHaveCSS('overflow-x', 'visible')
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
-  }
+  await navegacion.getByRole('button', { name: 'Tratamiento', exact: true }).click()
+  await expect(pantalla.locator('.cad-algoritmo-paso')).toHaveCount(fichasClinicas['Cetoacidosis diabética'].secciones.find(s => /tratamiento: secuencia práctica/i.test(s.titulo))!.puntos!.length)
+  await expect(pantalla.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' })).toHaveCount(0)
+  await navegacion.getByRole('button', { name: 'Diagnóstico', exact: true }).click()
+  await expect(pantalla.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' })).toBeVisible()
+  await expect(pantalla.locator('.cad-algoritmo-paso')).toHaveCount(0)
 })
