@@ -149,3 +149,53 @@ test('panel clínico CAD muestra tablas y algoritmo sin alterar texto fuente', a
   await expect(ventana.locator('.fuentes-clinicas a')).toHaveCount(datos.fuentes.length)
   await ventana.getByLabel('Cerrar ficha').click()
 })
+
+
+test('la consulta rápida de CAD genera tablas y algoritmo sin modificar sus datos clínicos', async ({ page }, testInfo) => {
+  const ficha = fichasClinicas['Cetoacidosis diabética']
+  const diagnostico = ficha.secciones.find((seccion) => /criterios diagnósticos/i.test(seccion.titulo))!
+  const tratamiento = ficha.secciones.find((seccion) => /tratamiento: secuencia práctica/i.test(seccion.titulo))!
+  const vigilancia = ficha.secciones.find((seccion) => /monitorización durante tratamiento/i.test(seccion.titulo))!
+  const errores = ficha.secciones.find((seccion) => /errores clínicos/i.test(seccion.titulo))!
+
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Abrir ficha destacada' }).click()
+  const dialogo = page.getByRole('dialog')
+  const panel = dialogo.locator('.cad-rapida')
+  await expect(panel).toBeVisible()
+  await expect(panel.locator('.cad-criterio-tarjeta')).toHaveCount(3)
+  await expect(panel.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' }).locator('tbody tr')).toHaveCount(3)
+  for (const punto of diagnostico.puntos!.slice(0, 3)) {
+    await expect(panel.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' })).toContainText(punto)
+  }
+
+  await panel.getByRole('button', { name: /Algoritmo terapéutico/ }).click()
+  await expect(panel.locator('.cad-algoritmo-paso')).toHaveCount(tratamiento.puntos!.length)
+  for (let indice = 0; indice < tratamiento.puntos!.length; indice++) {
+    await expect(panel.locator('.cad-algoritmo-paso').nth(indice)).toContainText(tratamiento.puntos![indice])
+  }
+  await panel.getByRole('button', { name: 'Tabla terapéutica' }).click()
+  const tablaTratamiento = panel.getByRole('table', { name: 'Tabla de tratamiento de cetoacidosis' })
+  await expect(tablaTratamiento.locator('tbody tr')).toHaveCount(tratamiento.puntos!.length)
+  for (const punto of tratamiento.puntos!) await expect(tablaTratamiento).toContainText(punto)
+
+  await panel.getByRole('button', { name: /Vigilancia y resolución/ }).click()
+  await expect(panel.getByRole('table', { name: 'Tabla de monitorización durante el tratamiento' }).locator('tbody tr')).toHaveCount(vigilancia.puntos!.length)
+  await panel.getByRole('button', { name: /Errores a evitar/ }).click()
+  await expect(panel.locator('.cad-alerta')).toHaveCount(errores.puntos!.length)
+
+  // La vista rápida no reemplaza las nueve secciones originales ni los enlaces a las fuentes.
+  await expect(dialogo.locator('.ficha-premium-seccion')).toHaveCount(ficha.secciones.length)
+  await expect(dialogo.locator('.fuentes-clinicas a')).toHaveCount(ficha.fuentes.length)
+  for (let indice = 0; indice < ficha.secciones.length; indice++) {
+    const contenido = dialogo.locator('.ficha-premium-seccion').nth(indice).locator('.ficha-premium-seccion-contenido')
+    const seccion = ficha.secciones[indice]
+    if (seccion.texto) await expect(contenido).toContainText(seccion.texto)
+    for (const punto of seccion.puntos ?? []) await expect(contenido).toContainText(punto)
+  }
+
+  const indice = dialogo.getByRole('navigation', { name: 'Ir a una sección' })
+  await indice.getByRole('button', { name: /Vista rápida: tablas y algoritmos/ }).click()
+  await expect(panel).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('cad-consulta-rapida.png'), animations: 'disabled' })
+});
