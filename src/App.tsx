@@ -5,6 +5,8 @@ import './App.css'
 import { temas } from './data/catalogo.ts'
 import type { NombreTema } from './data/catalogo.ts'
 import { fichasClinicas } from './data/fichas.ts'
+import type { FichaClinica } from './data/types.ts'
+import { CADReferenciaRapida } from './components/CADReferenciaRapida.tsx'
 
 // Los filtros se generan automáticamente a partir de los temas.
 
@@ -55,11 +57,97 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   )
 }
 
+
+function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
+  // Los contenidos se leen íntegros desde fichasClinicas; solo cambia su presentación.
+  const [cerradas, setCerradas] = useState<number[]>(() => ficha.secciones.map((_, indice) => indice).filter((indice) => indice !== 0))
+  const [activo, setActivo] = useState<number | 'fuentes' | 'resumen'>('resumen')
+  const referencias = useRef<(HTMLElement | null)[]>([])
+  const fuentesRef = useRef<HTMLDivElement | null>(null)
+  const resumenRef = useRef<HTMLDivElement | null>(null)
+  const indiceMovilRef = useRef<HTMLDetailsElement | null>(null)
+
+  const navegar = (destino: number | 'fuentes' | 'resumen') => {
+    setActivo(destino)
+    if (typeof destino === 'number') setCerradas((actual) => actual.filter((indice) => indice !== destino))
+    if (indiceMovilRef.current) indiceMovilRef.current.open = false
+
+    requestAnimationFrame(() => {
+      const objetivo = destino === 'fuentes' ? fuentesRef.current : destino === 'resumen' ? resumenRef.current : referencias.current[destino]
+      objetivo?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
+  const indice = (enMovil: boolean) => (
+    <nav className="cad-reader-indice" aria-label={enMovil ? 'Índice de la ficha en móvil' : 'Ir a una sección'}>
+      <button type="button" className={'cad-reader-indice-enlace' + (activo === 'resumen' ? ' activo' : '')} onClick={() => navegar('resumen')} aria-current={activo === 'resumen' ? 'location' : undefined}>
+        <Icon name="activity" size={17}/> <span>Consulta rápida</span>
+      </button>
+      {ficha.secciones.map((seccion, numero) => (
+        <button key={numero} type="button" className={'cad-reader-indice-enlace' + (activo === numero ? ' activo' : '')} onClick={() => navegar(numero)} aria-current={activo === numero ? 'location' : undefined}>
+          <span className="cad-reader-numero">{String(numero + 1).padStart(2, '0')}</span><span>{seccion.titulo}</span>
+        </button>
+      ))}
+      <button type="button" className={'cad-reader-indice-enlace' + (activo === 'fuentes' ? ' activo' : '')} onClick={() => navegar('fuentes')} aria-current={activo === 'fuentes' ? 'location' : undefined}>
+        <Icon name="book" size={17}/><span>Bibliografía y guías</span>
+      </button>
+    </nav>
+  )
+  const todasCerradas = cerradas.length === ficha.secciones.length
+
+  return (
+    <div className="cad-reader">
+      <aside className="cad-reader-aside" aria-label="Navegación del contenido clínico">
+        <div className="cad-reader-aside-titulo">CONTENIDO DE LA FICHA</div>
+        {indice(false)}
+      </aside>
+      <div className="cad-reader-main ficha-clinica">
+        <details className="cad-reader-movil" ref={indiceMovilRef}>
+          <summary><Icon name="layers" size={17}/><span>Índice de contenidos</span><span>{ficha.secciones.length} apartados</span><Icon name="chevron" size={16}/></summary>
+          {indice(true)}
+        </details>
+        <div className="cad-reader-resumen" ref={resumenRef} id="cad-resumen-visual">
+          <CADReferenciaRapida ficha={ficha} onIrASeccion={navegar}/>
+        </div>
+        <div className="cad-reader-separador">
+          <div><span className="cad-reader-separador-eyebrow">LECTURA COMPLETA</span><h2>Contenido clínico</h2><p>Los apartados originales, sin recortes ni modificaciones.</p></div>
+          <button type="button" onClick={() => setCerradas(todasCerradas ? [] : ficha.secciones.map((_, indice) => indice))}>{todasCerradas ? 'Expandir todas' : 'Contraer todas'}</button>
+        </div>
+        <div className="ficha-premium-secciones">
+          {ficha.secciones.map((seccion, numero) => {
+            const abierto = !cerradas.includes(numero)
+            return (
+              <section key={numero} className={'ficha-premium-seccion' + (abierto ? ' abierta' : '')} ref={(elemento) => { referencias.current[numero] = elemento }}>
+                <h3>
+                  <button type="button" className="ficha-premium-toggle" aria-expanded={abierto} aria-controls={'cad-contenido-' + numero} onClick={() => { setActivo(numero); setCerradas((actual) => abierto ? [...actual, numero] : actual.filter((n) => n !== numero)) }}>
+                    <span className="ficha-premium-seccion-numero">{String(numero + 1).padStart(2, '0')}</span><span className="ficha-premium-seccion-titulo">{seccion.titulo}</span><span className="ficha-premium-seccion-estado"><Icon name="chevron" size={18}/></span>
+                  </button>
+                </h3>
+                <div className="ficha-premium-seccion-contenido" id={'cad-contenido-' + numero} hidden={!abierto}>
+                  {seccion.texto && <p>{seccion.texto}</p>}
+                  {seccion.puntos && <ul className={/tratamiento: secuencia práctica/i.test(seccion.titulo) ? 'ficha-premium-pasos' : /criterios diagnósticos/i.test(seccion.titulo) ? 'ficha-premium-criterios' : undefined}>{seccion.puntos.map((punto, indice) => <li key={indice}>{punto}</li>)}</ul>}
+                </div>
+              </section>
+            )
+          })}
+        </div>
+        <div className="ficha-premium-bibliografia" ref={fuentesRef}>
+          <div className="ficha-premium-fuentes-encabezado"><Icon name="book" size={19}/><h3>Bibliografía y guías</h3></div>
+          <ul className="fuentes-clinicas">{ficha.fuentes.map((fuente) => <li key={fuente.url}><a href={fuente.url} target="_blank" rel="noreferrer">{fuente.titulo}<Icon name="arrow" size={15}/></a><p>{fuente.nota}</p></li>)}</ul>
+        </div>
+        <p className="cad-reader-nota"><Icon name="shield" size={17}/><span><strong>Nota de seguridad:</strong> material de apoyo para estudio. Verificar la versión vigente de las guías, el cuadro básico y el protocolo institucional; las decisiones y dosis se individualizan según el paciente.</span></p>
+      </div>
+    </div>
+  )
+}
+
 function ContenidoFicha({ nombre }: { nombre: NombreTema }) {
   const ficha = fichasClinicas[nombre]
   if (!ficha) {
     return <div className="aviso"><strong>Ficha en desarrollo y verificación</strong><p>Este tema aún no cuenta con una ficha completa validada contra una GPC mexicana y una guía internacional vigente. No se muestran dosis ni recomendaciones terapéuticas como si estuvieran verificadas. La ficha se debe completar con diagnóstico, diagnóstico diferencial, tratamiento, monitorización, criterios de referencia y bibliografía trazable.</p></div>
   }
+  if (nombre === 'Cetoacidosis diabética') return <FichaInteractivaCAD ficha={ficha}/>
+
   return <div className="ficha-clinica">
     <p><strong>Revisión de fuentes:</strong> {ficha.actualizacion}</p>
     <p><strong>Alcance:</strong> {ficha.alcance}</p>
@@ -89,10 +177,27 @@ function App() {
 
    const [especialidad, setEspecialidad] = useState('Todas')
 
-   const [seleccionado, setSeleccionado] = useState<(typeof temas)[number] | null>(null)
+   const [seleccionado, setSeleccionado] = useState<(typeof temas)[number] | null>(() => window.location.hash === '#/ficha/cetoacidosis-diabetica' ? temas.find((tema) => tema.nombre === 'Cetoacidosis diabética') ?? null : null)
    const [menuAbierto, setMenuAbierto] = useState(false)
    const [navActivo, setNavActivo] = useState<'inicio' | 'biblioteca' | 'favoritos' | 'recientes'>('inicio')
    const buscadorRef = useRef<HTMLInputElement>(null)
+   const posicionBiblioteca = useRef(0)
+   useEffect(() => {
+     const actualizarRuta = () => {
+       if (window.location.hash === '#/ficha/cetoacidosis-diabetica') {
+         const tema = temas.find((entrada) => entrada.nombre === 'Cetoacidosis diabética')
+         if (tema) setSeleccionado(tema)
+         window.scrollTo({ top: 0, behavior: 'instant' })
+       } else {
+         setSeleccionado((actual) => actual?.nombre === 'Cetoacidosis diabética' ? null : actual)
+         requestAnimationFrame(() => window.scrollTo({ top: posicionBiblioteca.current, behavior: 'instant' }))
+       }
+     }
+     window.addEventListener('popstate', actualizarRuta)
+     window.addEventListener('hashchange', actualizarRuta)
+     return () => { window.removeEventListener('popstate', actualizarRuta); window.removeEventListener('hashchange', actualizarRuta) }
+   }, [])
+
    useEffect(() => {
      const manejarAtajos = (evento: KeyboardEvent) => {
        if ((evento.metaKey || evento.ctrlKey) && evento.key.toLowerCase() === 'k') {
@@ -101,7 +206,7 @@ function App() {
        }
        if (evento.key === 'Escape') {
          setMenuAbierto(false)
-         setSeleccionado(null)
+         setSeleccionado((actual) => actual?.nombre === 'Cetoacidosis diabética' ? actual : null)
        }
      }
      document.addEventListener('keydown', manejarAtajos)
@@ -134,8 +239,21 @@ function App() {
      try { localStorage.setItem('manual-medico-recientes', JSON.stringify(recientes)) } catch { /* almacenamiento opcional */ }
    }, [recientes])
    const abrirFicha = (tema: (typeof temas)[number]) => {
+     if (tema.nombre === 'Cetoacidosis diabética') {
+       posicionBiblioteca.current = window.scrollY
+       if (window.location.hash !== '#/ficha/cetoacidosis-diabetica') window.history.pushState({ manualCAD: true }, '', '#/ficha/cetoacidosis-diabetica')
+       window.scrollTo({ top: 0, behavior: 'instant' })
+     }
      setSeleccionado(tema)
      setRecientes((actual) => [tema.nombre, ...actual.filter((nombre) => nombre !== tema.nombre)].slice(0, 5))
+   }
+   const volverDeCAD = () => {
+     if (window.history.state?.manualCAD) window.history.back()
+     else {
+       window.history.replaceState(null, '', '#biblioteca')
+       setSeleccionado(null)
+       window.scrollTo({ top: 0, behavior: 'instant' })
+     }
    }
    const alternarFavorito = (nombre: NombreTema) => {
      setFavoritos((actual) => actual.includes(nombre) ? actual.filter((item) => item !== nombre) : [...actual, nombre])
@@ -174,6 +292,28 @@ function App() {
      favoritos: 'Mis favoritos',
      recientes: 'Consultas recientes'
    }[navActivo]
+
+   if (seleccionado?.nombre === 'Cetoacidosis diabética') {
+     const fichaCAD = fichasClinicas['Cetoacidosis diabética']
+     return (
+       <main className={'app tema-' + temaVisual + ' cad-pagina'} id="cad-pagina">
+         <header className="cad-pagina-barra">
+           <button type="button" className="cad-pagina-volver" onClick={volverDeCAD} aria-label="Volver al manual"><Icon name="arrowRight" size={18}/> <span>Volver al manual</span></button>
+           <span className="cad-pagina-marca"><span className="cad-pagina-cruz"><Icon name="cross" size={15}/></span>Manual Médico</span>
+           <button type="button" className="cad-pagina-tema" onClick={() => setTemaVisual((actual) => actual === 'claro' ? 'oscuro' : 'claro')} aria-label={temaVisual === 'claro' ? 'Activar modo oscuro' : 'Activar modo claro'}><Icon name={temaVisual === 'claro' ? 'moon' : 'sun'} size={19}/></button>
+         </header>
+         <div className="cad-pagina-contenedor">
+           <header className="cad-pagina-encabezado">
+             <p className="cad-pagina-ruta">Biblioteca clínica <span>/</span> Endocrinología</p>
+             <h1>Cetoacidosis diabética</h1>
+             <p className="cad-pagina-descripcion">{seleccionado.resumen}</p>
+             <div className="cad-pagina-datos"><span><Icon name="clock" size={15}/>{fichaCAD.actualizacion}</span><span><Icon name="shield" size={15}/>{fichaCAD.alcance}</span></div>
+           </header>
+           <FichaInteractivaCAD ficha={fichaCAD}/>
+         </div>
+       </main>
+     )
+   }
 
    return (
      <main className={'app tema-' + temaVisual}>
