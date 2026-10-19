@@ -11,9 +11,9 @@ type Paso = {
 
 const pestañas: { id: Vista; titulo: string; abreviatura: string }[] = [
   { id: 'diagnostico', titulo: 'Diagnóstico', abreviatura: '01' },
-  { id: 'tratamiento', titulo: 'Algoritmo terapéutico', abreviatura: '02' },
-  { id: 'vigilancia', titulo: 'Vigilancia y resolución', abreviatura: '03' },
-  { id: 'alertas', titulo: 'Errores a evitar', abreviatura: '04' },
+  { id: 'tratamiento', titulo: 'Tratamiento', abreviatura: '02' },
+  { id: 'vigilancia', titulo: 'Seguimiento', abreviatura: '03' },
+  { id: 'alertas', titulo: 'Precauciones', abreviatura: '04' },
 ]
 
 function dividirEtiqueta(texto: string) {
@@ -73,15 +73,9 @@ export function CADReferenciaRapida({
     <div className="cad-rapida" aria-label="Herramientas de consulta rápida">
       <div className="cad-rapida-cabecera">
         <div>
-          <span className="cad-rapida-eyebrow"><span aria-hidden="true" className="cad-rapida-luz"/> NUEVO · CONSULTA VISUAL</span>
-          <h3>Panel de consulta rápida</h3>
-          <p>Tablas y flujos construidos a partir del contenido original de esta ficha.</p>
+          <h2>Consulta rápida</h2>
+          <p>Datos clave y secuencia clínica</p>
         </div>
-        <span className="cad-rapida-icono" aria-hidden="true">
-          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 12h4l3-7 5.3 14 3.2-7H22"/>
-          </svg>
-        </span>
       </div>
 
       <div className="cad-rapida-pestañas" role="group" aria-label="Vista rápida de cetoacidosis">
@@ -102,26 +96,11 @@ export function CADReferenciaRapida({
         {vista === 'diagnostico' && (
           <div className="cad-rapida-vista" data-vista="diagnostico">
             <div className="cad-rapida-vista-cabecera">
-              <div><span className="cad-rapida-kicker">CRITERIOS DIAGNÓSTICOS</span><h4>Tres componentes de la CAD</h4></div>
+              <div><h3>Los tres componentes diagnósticos</h3></div>
               <button type="button" onClick={() => irA(indiceCriterios)}>Ver apartado completo <span aria-hidden="true">↗</span></button>
             </div>
             {criterios.length >= 3 && (
               <>
-                <div className="cad-criterios-cadena" aria-label="Los tres componentes diagnósticos de la ficha">
-                  {criterios.slice(0, 3).map((punto, indice) => {
-                    const dato = dividirEtiqueta(punto)
-                    return (
-                      <div className="cad-criterio-posicion" key={punto}>
-                        <div className="cad-criterio-tarjeta">
-                          <span className="cad-criterio-numero">0{indice + 1}</span>
-                          <strong>{dato.etiqueta || 'Componente ' + (indice + 1)}</strong>
-                          <p>{dato.detalle}</p>
-                        </div>
-                        {indice < 2 && <span className="cad-criterios-y" aria-hidden="true">Y</span>}
-                      </div>
-                    )
-                  })}
-                </div>
                 <div className="cad-tabla-scroll">
                   <table className="cad-tabla" aria-label="Tabla de criterios diagnósticos de cetoacidosis">
                     <thead><tr><th scope="col">Componente</th><th scope="col">Criterio íntegro de la ficha</th></tr></thead>
@@ -142,7 +121,7 @@ export function CADReferenciaRapida({
         {vista === 'tratamiento' && (
           <div className="cad-rapida-vista" data-vista="tratamiento">
             <div className="cad-rapida-vista-cabecera">
-              <div><span className="cad-rapida-kicker">SECUENCIA TERAPÉUTICA</span><h4>Algoritmo de manejo</h4></div>
+              <div><h3>Secuencia de tratamiento</h3></div>
               <button type="button" onClick={() => irA(indiceTratamiento)}>Ver tratamiento completo <span aria-hidden="true">↗</span></button>
             </div>
             {pasoPotasioPrevio && <p className="cad-rapida-advertencia"><span aria-hidden="true">!</span><span>{pasoPotasioPrevio}</span></p>}
@@ -172,14 +151,13 @@ export function CADReferenciaRapida({
                 </table>
               </div>
             )}
-            <div className="cad-rapida-pie">El orden y el texto clínico proceden de «Tratamiento: secuencia práctica». Individualizar según el protocolo institucional.</div>
           </div>
         )}
 
         {vista === 'vigilancia' && (
           <div className="cad-rapida-vista" data-vista="vigilancia">
             <div className="cad-rapida-vista-cabecera">
-              <div><span className="cad-rapida-kicker">SEGUIMIENTO INTRAHOSPITALARIO</span><h4>Monitorización y resolución</h4></div>
+              <div><h3>Monitorización y resolución</h3></div>
               <button type="button" onClick={() => irA(indiceMonitorizacion)}>Ver monitorización <span aria-hidden="true">↗</span></button>
             </div>
             <div className="cad-tabla-scroll">
@@ -198,13 +176,12 @@ export function CADReferenciaRapida({
         {vista === 'alertas' && (
           <div className="cad-rapida-vista" data-vista="alertas">
             <div className="cad-rapida-vista-cabecera">
-              <div><span className="cad-rapida-kicker">SEGURIDAD CLÍNICA</span><h4>Errores que conviene evitar</h4></div>
+              <div><h3>Errores que conviene evitar</h3></div>
               <button type="button" onClick={() => irA(indiceErrores)}>Ver apartado completo <span aria-hidden="true">↗</span></button>
             </div>
             <div className="cad-alertas-grid">{errores.map((punto, indice) => (
               <div className="cad-alerta" key={indice}><span className="cad-alerta-marca" aria-hidden="true">!</span><span>{punto}</span></div>
             ))}</div>
-            <p className="cad-rapida-pie">Alertas copiadas del apartado «Errores clínicos que conviene evitar», sin añadir recomendaciones nuevas.</p>
           </div>
         )}
       </div>
