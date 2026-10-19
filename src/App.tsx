@@ -59,135 +59,83 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 
 
 function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
-  // La ficha médica original se muestra íntegra: solo cambia su presentación.
-  const [cerradas, setCerradas] = useState<number[]>([])
+  // Los contenidos se leen íntegros desde fichasClinicas; solo cambia su presentación.
+  const [cerradas, setCerradas] = useState<number[]>(() => ficha.secciones.map((_, indice) => indice).filter((indice) => indice !== 0))
   const [activo, setActivo] = useState<number | 'fuentes' | 'resumen'>('resumen')
   const referencias = useRef<(HTMLElement | null)[]>([])
   const fuentesRef = useRef<HTMLDivElement | null>(null)
   const resumenRef = useRef<HTMLDivElement | null>(null)
+  const indiceMovilRef = useRef<HTMLDetailsElement | null>(null)
 
   const navegar = (destino: number | 'fuentes' | 'resumen') => {
     setActivo(destino)
-    if (typeof destino === 'number') {
-      setCerradas((actual) => actual.filter((indice) => indice !== destino))
-    }
+    if (typeof destino === 'number') setCerradas((actual) => actual.filter((indice) => indice !== destino))
+    if (indiceMovilRef.current) indiceMovilRef.current.open = false
 
     requestAnimationFrame(() => {
       const objetivo = destino === 'fuentes' ? fuentesRef.current : destino === 'resumen' ? resumenRef.current : referencias.current[destino]
-      const contenedor = objetivo?.closest<HTMLElement>('.modal-contenido')
-      if (objetivo && contenedor) {
-        const delta = objetivo.getBoundingClientRect().top - contenedor.getBoundingClientRect().top
-        const margen = window.matchMedia('(max-width: 650px)').matches ? 72 : 12
-        contenedor.scrollTo({ top: contenedor.scrollTop + delta - margen, behavior: 'smooth' })
-      }
+      objetivo?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
   }
 
-  const accesos = [
-    { titulo: 'Diagnóstico', indice: ficha.secciones.findIndex((seccion) => /criterios diagnósticos|diagnóstico/i.test(seccion.titulo)) },
-    { titulo: 'Tratamiento', indice: ficha.secciones.findIndex((seccion) => /tratamiento/i.test(seccion.titulo)) },
-    { titulo: 'Monitorización', indice: ficha.secciones.findIndex((seccion) => /monitorizaci[oó]n|seguimiento/i.test(seccion.titulo)) },
-  ].filter((acceso) => acceso.indice >= 0)
-
+  const indice = (enMovil: boolean) => (
+    <nav className="cad-reader-indice" aria-label={enMovil ? 'Índice de la ficha en móvil' : 'Ir a una sección'}>
+      <button type="button" className={'cad-reader-indice-enlace' + (activo === 'resumen' ? ' activo' : '')} onClick={() => navegar('resumen')} aria-current={activo === 'resumen' ? 'location' : undefined}>
+        <Icon name="activity" size={17}/> <span>Consulta rápida</span>
+      </button>
+      {ficha.secciones.map((seccion, numero) => (
+        <button key={numero} type="button" className={'cad-reader-indice-enlace' + (activo === numero ? ' activo' : '')} onClick={() => navegar(numero)} aria-current={activo === numero ? 'location' : undefined}>
+          <span className="cad-reader-numero">{String(numero + 1).padStart(2, '0')}</span><span>{seccion.titulo}</span>
+        </button>
+      ))}
+      <button type="button" className={'cad-reader-indice-enlace' + (activo === 'fuentes' ? ' activo' : '')} onClick={() => navegar('fuentes')} aria-current={activo === 'fuentes' ? 'location' : undefined}>
+        <Icon name="book" size={17}/><span>Bibliografía y guías</span>
+      </button>
+    </nav>
+  )
   const todasCerradas = cerradas.length === ficha.secciones.length
 
   return (
-    <div className="ficha-premium-layout">
-      <aside className="ficha-premium-lado" aria-label="Índice de la ficha clínica">
-        <div className="ficha-premium-indice-cabecera">
-          <span className="ficha-premium-indice-icono"><Icon name="book" size={19}/></span>
-          <div><span className="ficha-premium-eyebrow">GUÍA DE LECTURA</span><strong>En esta ficha</strong></div>
-        </div>
-        <nav className="ficha-premium-indice" aria-label="Ir a una sección">
-          <button type="button" className={'ficha-premium-indice-enlace ficha-premium-indice-resumen' + (activo === 'resumen' ? ' activo' : '')} aria-current={activo === 'resumen' ? 'location' : undefined} onClick={() => navegar('resumen')}>
-            <Icon name="activity" size={17}/><span>Vista rápida: tablas y algoritmos</span>
-          </button>
-          {ficha.secciones.map((seccion, indice) => (
-            <button
-              type="button"
-              key={indice}
-              className={'ficha-premium-indice-enlace' + (activo === indice ? ' activo' : '')}
-              aria-current={activo === indice ? 'location' : undefined}
-              onClick={() => navegar(indice)}
-              title={seccion.titulo}
-            >
-              <span className="ficha-premium-numero">{String(indice + 1).padStart(2, '0')}</span>
-              <span>{seccion.titulo}</span>
-            </button>
-          ))}
-          <button type="button" className={'ficha-premium-indice-enlace ficha-premium-indice-fuentes' + (activo === 'fuentes' ? ' activo' : '')} aria-current={activo === 'fuentes' ? 'location' : undefined} onClick={() => navegar('fuentes')}>
-            <Icon name="book" size={16}/><span>Bibliografía y guías</span>
-          </button>
-        </nav>
-        <div className="ficha-premium-indice-pie"><Icon name="shield" size={15}/><span>Contenido para consulta y estudio clínico</span></div>
+    <div className="cad-reader">
+      <aside className="cad-reader-aside" aria-label="Navegación del contenido clínico">
+        <div className="cad-reader-aside-titulo">CONTENIDO DE LA FICHA</div>
+        {indice(false)}
       </aside>
-
-      <div className="ficha-premium-body ficha-clinica">
-        <div className="ficha-premium-metadata">
-          <span><Icon name="clock" size={16}/><strong>Revisión de fuentes:</strong> {ficha.actualizacion}</span>
-          <span><Icon name="shield" size={16}/><strong>Alcance:</strong> {ficha.alcance}</span>
-        </div>
-        <div className="ficha-premium-bienvenida">
-          <div>
-            <span className="ficha-premium-eyebrow">LECTURA CLÍNICA · MODO INTERACTIVO</span>
-            <h3>Explora la ficha a tu ritmo</h3>
-            <p>Utiliza el índice para ir a una sección o despliega únicamente los apartados que quieras repasar.</p>
-          </div>
-          <div className="ficha-premium-contador"><strong>{ficha.secciones.length}</strong><span>apartados</span></div>
-        </div>
-        <div ref={resumenRef} className="ficha-premium-referencia" id="cad-resumen-visual">
+      <div className="cad-reader-main ficha-clinica">
+        <details className="cad-reader-movil" ref={indiceMovilRef}>
+          <summary><Icon name="layers" size={17}/><span>Índice de contenidos</span><span>{ficha.secciones.length} apartados</span><Icon name="chevron" size={16}/></summary>
+          {indice(true)}
+        </details>
+        <div className="cad-reader-resumen" ref={resumenRef} id="cad-resumen-visual">
           <CADReferenciaRapida ficha={ficha} onIrASeccion={navegar}/>
         </div>
-        <div className="ficha-premium-atajos">
-          <span>IR DIRECTAMENTE A</span>
-          {accesos.map((acceso) => (
-            <button key={acceso.titulo} type="button" onClick={() => navegar(acceso.indice)}>{acceso.titulo}<Icon name="arrowRight" size={14}/></button>
-          ))}
-        </div>
-        <div className="ficha-premium-acciones">
-          <span><Icon name="layers" size={17}/> Contenido clínico</span>
-          <button type="button" onClick={() => setCerradas(todasCerradas ? [] : ficha.secciones.map((_, indice) => indice))}>
-            {todasCerradas ? 'Expandir todas' : 'Contraer todas'}
-          </button>
+        <div className="cad-reader-separador">
+          <div><span className="cad-reader-separador-eyebrow">LECTURA COMPLETA</span><h2>Contenido clínico</h2><p>Los apartados originales, sin recortes ni modificaciones.</p></div>
+          <button type="button" onClick={() => setCerradas(todasCerradas ? [] : ficha.secciones.map((_, indice) => indice))}>{todasCerradas ? 'Expandir todas' : 'Contraer todas'}</button>
         </div>
         <div className="ficha-premium-secciones">
-          {ficha.secciones.map((seccion, indice) => {
-            const abierto = !cerradas.includes(indice)
+          {ficha.secciones.map((seccion, numero) => {
+            const abierto = !cerradas.includes(numero)
             return (
-              <section
-                key={indice}
-                className={'ficha-premium-seccion' + (abierto ? ' abierta' : '')}
-                ref={(elemento) => { referencias.current[indice] = elemento }}
-              >
+              <section key={numero} className={'ficha-premium-seccion' + (abierto ? ' abierta' : '')} ref={(elemento) => { referencias.current[numero] = elemento }}>
                 <h3>
-                  <button
-                    type="button"
-                    className="ficha-premium-toggle"
-                    aria-expanded={abierto}
-                    aria-controls={'cad-contenido-' + indice}
-                    onClick={() => {
-                      setActivo(indice)
-                      setCerradas((actual) => abierto ? [...actual, indice] : actual.filter((valor) => valor !== indice))
-                    }}
-                  >
-                    <span className="ficha-premium-seccion-numero">{String(indice + 1).padStart(2, '0')}</span>
-                    <span className="ficha-premium-seccion-titulo">{seccion.titulo}</span>
-                    <span className="ficha-premium-seccion-estado"><Icon name="chevron" size={18}/></span>
+                  <button type="button" className="ficha-premium-toggle" aria-expanded={abierto} aria-controls={'cad-contenido-' + numero} onClick={() => { setActivo(numero); setCerradas((actual) => abierto ? [...actual, numero] : actual.filter((n) => n !== numero)) }}>
+                    <span className="ficha-premium-seccion-numero">{String(numero + 1).padStart(2, '0')}</span><span className="ficha-premium-seccion-titulo">{seccion.titulo}</span><span className="ficha-premium-seccion-estado"><Icon name="chevron" size={18}/></span>
                   </button>
                 </h3>
-                <div className="ficha-premium-seccion-contenido" id={'cad-contenido-' + indice} hidden={!abierto}>
+                <div className="ficha-premium-seccion-contenido" id={'cad-contenido-' + numero} hidden={!abierto}>
                   {seccion.texto && <p>{seccion.texto}</p>}
-                  {seccion.puntos && <ul className={/tratamiento: secuencia práctica/i.test(seccion.titulo) ? 'ficha-premium-pasos' : /criterios diagnósticos/i.test(seccion.titulo) ? 'ficha-premium-criterios' : undefined}>{seccion.puntos.map((punto, puntoIndice) => <li key={puntoIndice}>{punto}</li>)}</ul>}
+                  {seccion.puntos && <ul className={/tratamiento: secuencia práctica/i.test(seccion.titulo) ? 'ficha-premium-pasos' : /criterios diagnósticos/i.test(seccion.titulo) ? 'ficha-premium-criterios' : undefined}>{seccion.puntos.map((punto, indice) => <li key={indice}>{punto}</li>)}</ul>}
                 </div>
               </section>
             )
           })}
         </div>
         <div className="ficha-premium-bibliografia" ref={fuentesRef}>
-          <div className="ficha-premium-fuentes-encabezado"><span className="ficha-premium-fuentes-icono"><Icon name="book" size={19}/></span><div><span className="ficha-premium-eyebrow">RESPALDO CIENTÍFICO</span><h3>Bibliografía y guías</h3></div></div>
+          <div className="ficha-premium-fuentes-encabezado"><Icon name="book" size={19}/><h3>Bibliografía y guías</h3></div>
           <ul className="fuentes-clinicas">{ficha.fuentes.map((fuente) => <li key={fuente.url}><a href={fuente.url} target="_blank" rel="noreferrer">{fuente.titulo}<Icon name="arrow" size={15}/></a><p>{fuente.nota}</p></li>)}</ul>
         </div>
-        <p className="ficha-premium-nota"><Icon name="shield" size={16}/><span><strong>Nota de seguridad:</strong> material de apoyo para estudio. Verificar la versión vigente de las guías, el cuadro básico y el protocolo institucional; las decisiones y dosis se individualizan según el paciente.</span></p>
+        <p className="cad-reader-nota"><Icon name="shield" size={17}/><span><strong>Nota de seguridad:</strong> material de apoyo para estudio. Verificar la versión vigente de las guías, el cuadro básico y el protocolo institucional; las decisiones y dosis se individualizan según el paciente.</span></p>
       </div>
     </div>
   )
@@ -229,10 +177,28 @@ function App() {
 
    const [especialidad, setEspecialidad] = useState('Todas')
 
-   const [seleccionado, setSeleccionado] = useState<(typeof temas)[number] | null>(null)
+   const [seleccionado, setSeleccionado] = useState<(typeof temas)[number] | null>(() => window.location.hash === '#/ficha/cetoacidosis-diabetica' ? temas.find((tema) => tema.nombre === 'Cetoacidosis diabética') ?? null : null)
    const [menuAbierto, setMenuAbierto] = useState(false)
    const [navActivo, setNavActivo] = useState<'inicio' | 'biblioteca' | 'favoritos' | 'recientes'>('inicio')
    const buscadorRef = useRef<HTMLInputElement>(null)
+
+   const posicionBiblioteca = useRef(0)
+   useEffect(() => {
+     const actualizarRuta = () => {
+       if (window.location.hash === '#/ficha/cetoacidosis-diabetica') {
+         const tema = temas.find((entrada) => entrada.nombre === 'Cetoacidosis diabética')
+         if (tema) setSeleccionado(tema)
+         window.scrollTo({ top: 0, behavior: 'instant' })
+       } else {
+         setSeleccionado((actual) => actual?.nombre === 'Cetoacidosis diabética' ? null : actual)
+         requestAnimationFrame(() => window.scrollTo({ top: posicionBiblioteca.current, behavior: 'instant' }))
+       }
+     }
+     window.addEventListener('popstate', actualizarRuta)
+     window.addEventListener('hashchange', actualizarRuta)
+     return () => { window.removeEventListener('popstate', actualizarRuta); window.removeEventListener('hashchange', actualizarRuta) }
+   }, [])
+
    useEffect(() => {
      const manejarAtajos = (evento: KeyboardEvent) => {
        if ((evento.metaKey || evento.ctrlKey) && evento.key.toLowerCase() === 'k') {
@@ -241,7 +207,7 @@ function App() {
        }
        if (evento.key === 'Escape') {
          setMenuAbierto(false)
-         setSeleccionado(null)
+         setSeleccionado((actual) => actual?.nombre === 'Cetoacidosis diabética' ? actual : null)
        }
      }
      document.addEventListener('keydown', manejarAtajos)
@@ -274,8 +240,21 @@ function App() {
      try { localStorage.setItem('manual-medico-recientes', JSON.stringify(recientes)) } catch { /* almacenamiento opcional */ }
    }, [recientes])
    const abrirFicha = (tema: (typeof temas)[number]) => {
+     if (tema.nombre === 'Cetoacidosis diabética') {
+       posicionBiblioteca.current = window.scrollY
+       if (window.location.hash !== '#/ficha/cetoacidosis-diabetica') window.history.pushState({ manualCAD: true }, '', '#/ficha/cetoacidosis-diabetica')
+       window.scrollTo({ top: 0, behavior: 'instant' })
+     }
      setSeleccionado(tema)
      setRecientes((actual) => [tema.nombre, ...actual.filter((nombre) => nombre !== tema.nombre)].slice(0, 5))
+   }
+   const volverDeCAD = () => {
+     if (window.history.state?.manualCAD) window.history.back()
+     else {
+       window.history.replaceState(null, '', '#biblioteca')
+       setSeleccionado(null)
+       window.scrollTo({ top: 0, behavior: 'instant' })
+     }
    }
    const alternarFavorito = (nombre: NombreTema) => {
      setFavoritos((actual) => actual.includes(nombre) ? actual.filter((item) => item !== nombre) : [...actual, nombre])
@@ -314,6 +293,28 @@ function App() {
      favoritos: 'Mis favoritos',
      recientes: 'Consultas recientes'
    }[navActivo]
+
+   if (seleccionado?.nombre === 'Cetoacidosis diabética') {
+     const fichaCAD = fichasClinicas['Cetoacidosis diabética']
+     return (
+       <main className={'app tema-' + temaVisual + ' cad-pagina'} id="cad-pagina">
+         <header className="cad-pagina-barra">
+           <button type="button" className="cad-pagina-volver" onClick={volverDeCAD} aria-label="Volver al manual"><Icon name="arrowRight" size={18}/> <span>Volver al manual</span></button>
+           <span className="cad-pagina-marca"><span className="cad-pagina-cruz"><Icon name="cross" size={15}/></span>Manual Médico</span>
+           <button type="button" className="cad-pagina-tema" onClick={() => setTemaVisual((actual) => actual === 'claro' ? 'oscuro' : 'claro')} aria-label={temaVisual === 'claro' ? 'Activar modo oscuro' : 'Activar modo claro'}><Icon name={temaVisual === 'claro' ? 'moon' : 'sun'} size={19}/></button>
+         </header>
+         <div className="cad-pagina-contenedor">
+           <header className="cad-pagina-encabezado">
+             <p className="cad-pagina-ruta">Biblioteca clínica <span>/</span> Endocrinología</p>
+             <h1>Cetoacidosis diabética</h1>
+             <p className="cad-pagina-descripcion">{seleccionado.resumen}</p>
+             <div className="cad-pagina-datos"><span><Icon name="clock" size={15}/>{fichaCAD.actualizacion}</span><span><Icon name="shield" size={15}/>{fichaCAD.alcance}</span></div>
+           </header>
+           <FichaInteractivaCAD ficha={fichaCAD}/>
+         </div>
+       </main>
+     )
+   }
 
    return (
      <main className={'app tema-' + temaVisual}>
@@ -462,7 +463,7 @@ function App() {
          </div>
        </div>
 
-       {seleccionado && <div className="fondo-modal" onClick={() => setSeleccionado(null)}><section className={'modal' + (seleccionado.nombre === 'Cetoacidosis diabética' ? ' modal-interactivo' : '')} role="dialog" aria-modal="true" aria-labelledby="titulo-modal" onClick={(evento) => evento.stopPropagation()}><div className="modal-cabecera"><span className="sobretitulo">{seleccionado.especialidad}</span><button className="cerrar" type="button" onClick={() => setSeleccionado(null)} aria-label="Cerrar ficha"><Icon name="x" size={20}/></button></div><div className="modal-intro"><span className="modal-etiqueta">FICHA CLÍNICA</span><h2 id="titulo-modal">{seleccionado.nombre}</h2><p>{seleccionado.resumen}</p></div><div className="modal-contenido"><ContenidoFicha nombre={seleccionado.nombre}/></div><div className="modal-pie"><span>Consulta siempre la versión vigente de las guías.</span><button className="boton-principal" type="button" onClick={() => setSeleccionado(null)}>Volver al manual <Icon name="arrowRight" size={17}/></button></div></section></div>}
+       {seleccionado && seleccionado.nombre !== 'Cetoacidosis diabética' && <div className="fondo-modal" onClick={() => setSeleccionado(null)}><section className={'modal' + (seleccionado.nombre === 'Cetoacidosis diabética' ? ' modal-interactivo' : '')} role="dialog" aria-modal="true" aria-labelledby="titulo-modal" onClick={(evento) => evento.stopPropagation()}><div className="modal-cabecera"><span className="sobretitulo">{seleccionado.especialidad}</span><button className="cerrar" type="button" onClick={() => setSeleccionado(null)} aria-label="Cerrar ficha"><Icon name="x" size={20}/></button></div><div className="modal-intro"><span className="modal-etiqueta">FICHA CLÍNICA</span><h2 id="titulo-modal">{seleccionado.nombre}</h2><p>{seleccionado.resumen}</p></div><div className="modal-contenido"><ContenidoFicha nombre={seleccionado.nombre}/></div><div className="modal-pie"><span>Consulta siempre la versión vigente de las guías.</span><button className="boton-principal" type="button" onClick={() => setSeleccionado(null)}>Volver al manual <Icon name="arrowRight" size={17}/></button></div></section></div>}
      </main>
    )
 }
