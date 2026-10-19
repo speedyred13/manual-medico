@@ -46,6 +46,7 @@ export function CADReferenciaRapida({
   onIrASeccion: (indice: number) => void
 }) {
   const [vista, setVista] = useState<Vista>('diagnostico')
+  const [formatoTratamiento, setFormatoTratamiento] = useState<'algoritmo' | 'tabla'>('algoritmo')
 
   const indiceCriterios = ficha.secciones.findIndex((seccion) => /criterios diagnósticos/i.test(seccion.titulo))
   const indiceTratamiento = ficha.secciones.findIndex((seccion) => /tratamiento: secuencia práctica/i.test(seccion.titulo))
@@ -145,7 +146,11 @@ export function CADReferenciaRapida({
               <button type="button" onClick={() => irA(indiceTratamiento)}>Ver tratamiento completo <span aria-hidden="true">↗</span></button>
             </div>
             {pasoPotasioPrevio && <p className="cad-rapida-advertencia"><span aria-hidden="true">!</span><span>{pasoPotasioPrevio}</span></p>}
-            <div className="cad-algoritmo" aria-label="Pasos terapéuticos tomados del texto original">
+            <div className="cad-rapida-formato" role="group" aria-label="Presentación del tratamiento">
+              <button type="button" className={formatoTratamiento === 'algoritmo' ? 'activo' : ''} aria-pressed={formatoTratamiento === 'algoritmo'} onClick={() => setFormatoTratamiento('algoritmo')}>Algoritmo visual</button>
+              <button type="button" className={formatoTratamiento === 'tabla' ? 'activo' : ''} aria-pressed={formatoTratamiento === 'tabla'} onClick={() => setFormatoTratamiento('tabla')}>Tabla terapéutica</button>
+            </div>
+            {formatoTratamiento === 'algoritmo' ? <div className="cad-algoritmo" aria-label="Pasos terapéuticos tomados del texto original">
               {pasos.map((paso) => (
                 <div key={paso.numero} className="cad-algoritmo-paso">
                   <span className="cad-algoritmo-marca">{String(paso.numero).padStart(2,'0')}</span>
@@ -155,7 +160,18 @@ export function CADReferenciaRapida({
                   </div>
                 </div>
               ))}
-            </div>
+            </div> : (
+              <div className="cad-tabla-scroll">
+                <table className="cad-tabla cad-tabla-tratamiento" aria-label="Tabla de tratamiento de cetoacidosis">
+                  <thead><tr><th scope="col">Paso</th><th scope="col">Intervención</th><th scope="col">Indicaciones y precauciones originales</th></tr></thead>
+                  <tbody>{pasos.map((paso) => <tr key={paso.numero}>
+                    <th scope="row">{String(paso.numero).padStart(2, '0')}</th>
+                    <td><strong>{paso.etiqueta}</strong></td>
+                    <td>{paso.texto}</td>
+                  </tr>)}</tbody>
+                </table>
+              </div>
+            )}
             <div className="cad-rapida-pie">El orden y el texto clínico proceden de «Tratamiento: secuencia práctica». Individualizar según el protocolo institucional.</div>
           </div>
         )}
