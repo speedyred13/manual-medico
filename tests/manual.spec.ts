@@ -148,21 +148,37 @@ test('CAD conserva cifras, algoritmo y tabla derivados del texto original', asyn
   await expect(panel.locator('.cad-criterio-tarjeta')).toHaveCount(0)
   const tablaDiagnostico = panel.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' })
   await expect(tablaDiagnostico.locator('tbody tr')).toHaveCount(3)
-  for (const criterio of criterios.slice(0, 3)) await expect(tablaDiagnostico).toContainText(criterio)
+  for (const criterio of criterios.slice(0, 3)) {
+    const separador = criterio.indexOf(':')
+    const etiqueta = criterio.slice(0, separador).trim()
+    const contenido = criterio.slice(separador + 1).trim()
+    await expect(tablaDiagnostico).toContainText(etiqueta)
+    await expect(tablaDiagnostico).toContainText(contenido)
+  }
 
   const navegacion = panel.getByRole('group', { name: 'Vista rápida de cetoacidosis' })
   await navegacion.getByRole('button', { name: 'Tratamiento' }).click()
   await expect(panel.locator('.cad-algoritmo-paso')).toHaveCount(tratamiento.length)
-  for (let indice = 0; indice < tratamiento.length; indice++) await expect(panel.locator('.cad-algoritmo-paso').nth(indice)).toContainText(tratamiento[indice])
+  for (let indice = 0; indice < tratamiento.length; indice++) {
+    const match = /^\d+\)\s*([^:]+):\s*(.*)$/.exec(tratamiento[indice])
+    expect(match).not.toBeNull()
+    await expect(panel.locator('.cad-algoritmo-paso').nth(indice).locator('.cad-algoritmo-etiqueta')).toContainText(match![1])
+    await expect(panel.locator('.cad-algoritmo-paso').nth(indice).locator('p')).toContainText(match![2])
+  }
   await panel.getByRole('button', { name: 'Tabla terapéutica' }).click()
   const tablaTratamiento = panel.getByRole('table', { name: 'Tabla de tratamiento de cetoacidosis' })
   await expect(tablaTratamiento.locator('tbody tr')).toHaveCount(tratamiento.length)
-  for (const punto of tratamiento) await expect(tablaTratamiento).toContainText(punto)
+  for (const punto of tratamiento) {
+    const match = /^\d+\)\s*([^:]+):\s*(.*)$/.exec(punto)
+    expect(match).not.toBeNull()
+    await expect(tablaTratamiento).toContainText(match![1])
+    await expect(tablaTratamiento).toContainText(match![2])
+  }
 
   await navegacion.getByRole('button', { name: 'Seguimiento' }).click()
   await expect(panel.getByRole('table', { name: 'Tabla de monitorización durante el tratamiento' }).locator('tbody tr')).toHaveCount(monitorizacion.length)
   await expect(panel.locator('.cad-resolucion-item')).toHaveCount(resolucion.length)
-  await navegacion.getByRole('button', { name: 'Precauciones' }).click()
+  await panel.getByRole('button', { name: /Precauciones clínicas: errores que evitar/ }).click()
   await expect(panel.locator('.cad-alerta')).toHaveCount(errores.length)
 
   for (let indice = 0; indice < ficha.secciones.length; indice++) {
@@ -172,7 +188,14 @@ test('CAD conserva cifras, algoritmo y tabla derivados del texto original', asyn
     for (const punto of seccion.puntos ?? []) await expect(contenido).toContainText(punto)
   }
   await expect(pantalla.locator('.fuentes-clinicas a')).toHaveCount(ficha.fuentes.length)
-  await navegacion.getByRole('button', { name: 'Diagnóstico' }).click()
+  await navegacion.getByRole('button', { name: /Diagnóstico/ }).click()
+  await pantalla.getByRole('button', { name: /Ir a la ficha completa/ }).click()
+  await expect(pantalla.locator('.ficha-premium-seccion').first().getByRole('button')).toHaveAttribute('aria-expanded', 'true')
   await pantalla.locator('.cad-reader-resumen').scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('cad-pagina-completa.png'), fullPage: true, animations: 'disabled' })
+  if (testInfo.project.name === 'movil') {
+    await expect(navegacion.getByRole('button')).toHaveCount(3)
+    await expect(panel.locator('.cad-tabla-scroll').first()).toHaveCSS('overflow-x', 'visible')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
+  }
 })
