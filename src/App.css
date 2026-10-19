@@ -855,3 +855,13 @@ html { scroll-padding-top:92px; }
 @media(prefers-reduced-motion:reduce) {
   .cad-rapida-pestaña { transition:none !important; }
 }
+
+/* Treatment view switch — flow vs tabular recommendations */
+.cad-rapida-formato { display:inline-flex; align-items:center; gap:3px; max-width:100%; margin:0 0 16px; padding:4px; border:1px solid var(--borde); border-radius:11px; background:var(--superficie-suave); }
+.cad-rapida-formato button { min-height:34px; padding:7px 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--texto-secundario); font-size:10px; font-weight:800; cursor:pointer; }
+.cad-rapida-formato button:hover { color:var(--acento); }
+.cad-rapida-formato button.activo { border-color:var(--borde); background:var(--superficie); color:var(--acento); box-shadow:0 3px 9px rgba(31,67,129,.08); }
+.cad-tabla-tratamiento { min-width:530px; }
+.cad-tabla-tratamiento tbody th { width:46px; color:var(--acento); }
+.cad-tabla-tratamiento tbody td:nth-child(2) { width:118px; color:var(--texto); font-weight:800; }
+@media(max-width:650px) { .cad-rapida-formato { display:flex; } .cad-rapida-formato button { flex:1; padding-inline:5px; } }
