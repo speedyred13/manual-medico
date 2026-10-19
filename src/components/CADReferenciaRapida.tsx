@@ -1,197 +1,102 @@
 import { useState } from 'react'
-import type { FichaClinica } from '../data/types.ts'
+import type { SeccionFicha } from '../data/types.ts'
 
-type Vista = 'diagnostico' | 'tratamiento' | 'vigilancia' | 'alertas'
+type PasoTratamiento = { numero: number; titulo: string; detalle: string }
 
-type Paso = {
-  numero: number
-  etiqueta: string
-  detalle: string
+function desglosarPunto(punto: string) {
+  const separador = punto.indexOf(':')
+  if (separador < 0) return { titulo: '', detalle: punto }
+  return { titulo: punto.slice(0, separador).trim(), detalle: punto.slice(separador + 1).trim() }
 }
 
-const pestañas: { id: 'diagnostico' | 'tratamiento' | 'vigilancia'; titulo: string; ayuda: string }[] = [
-  { id: 'diagnostico', titulo: 'Diagnóstico', ayuda: 'Criterios' },
-  { id: 'tratamiento', titulo: 'Tratamiento', ayuda: 'Manejo' },
-  { id: 'vigilancia', titulo: 'Seguimiento', ayuda: 'Vigilancia y resolución' },
-]
-
-function dividirEtiqueta(texto: string) {
-  const separador = texto.indexOf(':')
-  if (separador < 0) return { etiqueta: '', detalle: texto }
-  return { etiqueta: texto.slice(0, separador).trim(), detalle: texto.slice(separador + 1).trim() }
-}
-
-function obtenerPasos(puntos: string[]): Paso[] {
-  return puntos.map((texto, indice) => {
-    const partes = /^(\d+)\)\s*([^:]+):/.exec(texto)
+function pasosDelTratamiento(puntos: string[]): PasoTratamiento[] {
+  return puntos.map((punto, indice) => {
+    const partes = /^(\d+)\)\s*([^:]+):\s*(.*)$/.exec(punto)
     return {
       numero: partes ? Number(partes[1]) : indice + 1,
-      etiqueta: partes ? partes[2].trim() : 'Paso ' + (indice + 1),
-      detalle: partes ? texto.slice(partes[0].length).trim() : texto,
+      titulo: partes ? partes[2].trim() : '',
+      detalle: partes ? partes[3] : punto,
     }
   })
 }
 
 /**
- * Referencia visual derivada de fichasClinicas["Cetoacidosis diabética"].
- * Ninguna recomendación, dosis, criterio ni fuente se almacena aquí:
- * las tablas y el algoritmo leen el texto clínico original en tiempo real.
+ * Presentación visual de UN solo apartado clínico.
+ * Los textos, las dosis y los criterios proceden siempre del archivo src/data/existentes.ts.
+ * No incorpora información de otros apartados ni genera recomendaciones independientes.
  */
-export function CADReferenciaRapida({
-  ficha,
-  onIrASeccion,
-  onVerFichaCompleta,
-}: {
-  ficha: FichaClinica
-  onIrASeccion: (indice: number) => void
-  onVerFichaCompleta: () => void
-}) {
-  const [vista, setVista] = useState<Vista>('diagnostico')
+export function CADReferenciaRapida({ seccion }: { seccion: SeccionFicha }) {
   const [formatoTratamiento, setFormatoTratamiento] = useState<'algoritmo' | 'tabla'>('algoritmo')
-
-  const indiceCriterios = ficha.secciones.findIndex((seccion) => /criterios diagnósticos/i.test(seccion.titulo))
-  const indiceTratamiento = ficha.secciones.findIndex((seccion) => /tratamiento: secuencia práctica/i.test(seccion.titulo))
-  const indiceMonitorizacion = ficha.secciones.findIndex((seccion) => /monitorización durante tratamiento/i.test(seccion.titulo))
-  const indiceResolucion = ficha.secciones.findIndex((seccion) => /resolución y transición/i.test(seccion.titulo))
-  const indiceErrores = ficha.secciones.findIndex((seccion) => /errores clínicos/i.test(seccion.titulo))
-  const indiceEvaluacion = ficha.secciones.findIndex((seccion) => /evaluación inicial/i.test(seccion.titulo))
-
-  const criterios = indiceCriterios >= 0 ? ficha.secciones[indiceCriterios].puntos ?? [] : []
-  const tratamiento = indiceTratamiento >= 0 ? ficha.secciones[indiceTratamiento].puntos ?? [] : []
-  const monitorizacion = indiceMonitorizacion >= 0 ? ficha.secciones[indiceMonitorizacion].puntos ?? [] : []
-  const resolucion = indiceResolucion >= 0 ? ficha.secciones[indiceResolucion].puntos ?? [] : []
-  const errores = indiceErrores >= 0 ? ficha.secciones[indiceErrores].puntos ?? [] : []
-  const evaluacion = indiceEvaluacion >= 0 ? ficha.secciones[indiceEvaluacion].puntos ?? [] : []
-
-  const pasos = obtenerPasos(tratamiento)
-  const pasoPotasioPrevio = evaluacion.find((punto) => /ECG y potasio antes de iniciar insulina/i.test(punto))
-
-  const irA = (indice: number) => {
-    if (indice >= 0) onIrASeccion(indice)
-  }
+  const puntos = seccion.puntos ?? []
+  const criterios = /criterios diagnósticos/i.test(seccion.titulo)
+  const tratamiento = /tratamiento: secuencia práctica/i.test(seccion.titulo)
+  const monitorizacion = /monitorización durante tratamiento/i.test(seccion.titulo)
+  const errores = /errores clínicos/i.test(seccion.titulo)
+  const pasos = tratamiento ? pasosDelTratamiento(puntos) : []
 
   return (
-    <div className="cad-rapida" aria-label="Herramientas de consulta rápida">
-      <div className="cad-rapida-cabecera">
-        <div>
-          <h2>¿Qué necesitas consultar?</h2>
-          <p>Elige un tema para ver lo esencial.</p>
-        </div>
-        <button className="cad-rapida-ver-todo" type="button" onClick={onVerFichaCompleta}>
-          Ir a la ficha completa <span aria-hidden="true">↓</span>
-        </button>
-      </div>
+    <div className="cad-apartado-contenido">
+      {seccion.texto && <p className="cad-apartado-texto">{seccion.texto}</p>}
 
-      <div className="cad-rapida-pestañas" role="group" aria-label="Vista rápida de cetoacidosis">
-        {pestañas.map((pestaña) => (
-          <button
-            key={pestaña.id}
-            type="button"
-            className={'cad-rapida-pestaña' + (vista === pestaña.id ? ' seleccionada' : '')}
-            aria-pressed={vista === pestaña.id}
-            onClick={() => setVista(pestaña.id)}
-          >
-            <strong>{pestaña.titulo}</strong><small>{pestaña.ayuda}</small>
-          </button>
-        ))}
-      </div>
-      <button type="button" className={'cad-rapida-precauciones' + (vista === 'alertas' ? ' seleccionada' : '')} aria-pressed={vista === 'alertas'} onClick={() => setVista('alertas')}>
-        <span aria-hidden="true">!</span> Precauciones clínicas: errores que evitar <span aria-hidden="true">→</span>
-      </button>
-
-      <div className="cad-rapida-panel" aria-live="polite">
-        {vista === 'diagnostico' && (
-          <div className="cad-rapida-vista" data-vista="diagnostico">
-            <div className="cad-rapida-vista-cabecera">
-              <div><h3>Los tres componentes diagnósticos</h3></div>
-              <button type="button" onClick={() => irA(indiceCriterios)}>Ver apartado completo <span aria-hidden="true">↗</span></button>
-            </div>
-            {criterios.length >= 3 && (
-              <>
-                <div className="cad-tabla-scroll">
-                  <table className="cad-tabla" aria-label="Tabla de criterios diagnósticos de cetoacidosis">
-                    <thead><tr><th scope="col">Componente</th><th scope="col">Criterio</th></tr></thead>
-                    <tbody>
-                      {criterios.slice(0, 3).map((punto) => {
-                        const dato = dividirEtiqueta(punto)
-                        return <tr key={punto}><th scope="row">{dato.etiqueta}</th><td>{dato.detalle}</td></tr>
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                {criterios.slice(3).map((punto) => <p className="cad-rapida-nota" key={punto}><span aria-hidden="true">i</span>{punto}</p>)}
-              </>
-            )}
+      {criterios && puntos.length > 0 && (
+        <>
+          <div className="cad-tabla-scroll">
+            <table className="cad-tabla" aria-label="Tabla de criterios diagnósticos de cetoacidosis">
+              <thead><tr><th scope="col">Componente</th><th scope="col">Criterio</th></tr></thead>
+              <tbody>{puntos.slice(0, 3).map((punto) => {
+                const detalle = desglosarPunto(punto)
+                return <tr key={punto}><th scope="row">{detalle.titulo}</th><td>{detalle.detalle}</td></tr>
+              })}</tbody>
+            </table>
           </div>
-        )}
+          {puntos.slice(3).map((punto) => <p className="cad-apartado-nota" key={punto}>{punto}</p>)}
+        </>
+      )}
 
-        {vista === 'tratamiento' && (
-          <div className="cad-rapida-vista" data-vista="tratamiento">
-            <div className="cad-rapida-vista-cabecera">
-              <div><h3>Secuencia de tratamiento</h3></div>
-              <button type="button" onClick={() => irA(indiceTratamiento)}>Ver tratamiento completo <span aria-hidden="true">↗</span></button>
-            </div>
-            {pasoPotasioPrevio && <p className="cad-rapida-advertencia"><span aria-hidden="true">!</span><span>{pasoPotasioPrevio}</span></p>}
-            <div className="cad-rapida-formato" role="group" aria-label="Presentación del tratamiento">
-              <button type="button" className={formatoTratamiento === 'algoritmo' ? 'activo' : ''} aria-pressed={formatoTratamiento === 'algoritmo'} onClick={() => setFormatoTratamiento('algoritmo')}>Algoritmo visual</button>
-              <button type="button" className={formatoTratamiento === 'tabla' ? 'activo' : ''} aria-pressed={formatoTratamiento === 'tabla'} onClick={() => setFormatoTratamiento('tabla')}>Tabla terapéutica</button>
-            </div>
-            {formatoTratamiento === 'algoritmo' ? <div className="cad-algoritmo" aria-label="Pasos terapéuticos tomados del texto original">
-              {pasos.map((paso) => (
-                <div key={paso.numero} className="cad-algoritmo-paso">
-                  <span className="cad-algoritmo-marca">{String(paso.numero).padStart(2,'0')}</span>
+      {tratamiento && (
+        <>
+          <div className="cad-apartado-formato" role="group" aria-label="Presentación del tratamiento">
+            <button type="button" className={formatoTratamiento === 'algoritmo' ? 'activo' : ''} aria-pressed={formatoTratamiento === 'algoritmo'} onClick={() => setFormatoTratamiento('algoritmo')}>Algoritmo</button>
+            <button type="button" className={formatoTratamiento === 'tabla' ? 'activo' : ''} aria-pressed={formatoTratamiento === 'tabla'} onClick={() => setFormatoTratamiento('tabla')}>Tabla</button>
+          </div>
+          {formatoTratamiento === 'algoritmo'
+            ? <div className="cad-algoritmo" aria-label="Algoritmo terapéutico">
+                {pasos.map((paso) => <div key={paso.numero} className="cad-algoritmo-paso">
+                  <span className="cad-algoritmo-marca">{String(paso.numero).padStart(2, '0')}</span>
                   <div className="cad-algoritmo-tarjeta">
-                    <div className="cad-algoritmo-etiqueta"><strong>{paso.etiqueta}</strong></div>
+                    {paso.titulo && <div className="cad-algoritmo-etiqueta"><strong>{paso.titulo}</strong></div>}
                     <p>{paso.detalle}</p>
                   </div>
-                </div>
-              ))}
-            </div> : (
-              <div className="cad-tabla-scroll">
+                </div>)}
+              </div>
+            : <div className="cad-tabla-scroll">
                 <table className="cad-tabla cad-tabla-tratamiento" aria-label="Tabla de tratamiento de cetoacidosis">
-                  <thead><tr><th scope="col">Paso</th><th scope="col">Intervención</th><th scope="col">Indicaciones y precauciones originales</th></tr></thead>
+                  <thead><tr><th scope="col">Paso</th><th scope="col">Intervención</th><th scope="col">Indicaciones y precauciones</th></tr></thead>
                   <tbody>{pasos.map((paso) => <tr key={paso.numero}>
                     <th scope="row">{String(paso.numero).padStart(2, '0')}</th>
-                    <td><strong>{paso.etiqueta}</strong></td>
-                    <td>{paso.detalle}</td>
+                    <td>{paso.titulo}</td><td>{paso.detalle}</td>
                   </tr>)}</tbody>
                 </table>
-              </div>
-            )}
-          </div>
-        )}
+              </div>}
+        </>
+      )}
 
-        {vista === 'vigilancia' && (
-          <div className="cad-rapida-vista" data-vista="vigilancia">
-            <div className="cad-rapida-vista-cabecera">
-              <div><h3>Monitorización y resolución</h3></div>
-              <button type="button" onClick={() => irA(indiceMonitorizacion)}>Ver monitorización <span aria-hidden="true">↗</span></button>
-            </div>
-            <div className="cad-tabla-scroll">
-              <table className="cad-tabla cad-tabla-vigilancia" aria-label="Tabla de monitorización durante el tratamiento">
-                <thead><tr><th scope="col">Control</th><th scope="col">Indicaciones de la ficha</th></tr></thead>
-                <tbody>{monitorizacion.map((punto, indice) => <tr key={indice}><th scope="row">0{indice + 1}</th><td>{punto}</td></tr>)}</tbody>
-              </table>
-            </div>
-            <div className="cad-rapida-subtitulo"><h5>Resolución y transición</h5><button type="button" onClick={() => irA(indiceResolucion)}>Ir al apartado <span aria-hidden="true">↗</span></button></div>
-            <div className="cad-resolucion-lista">{resolucion.map((punto, indice) => (
-              <div className="cad-resolucion-item" key={indice}><span aria-hidden="true">{String(indice + 1).padStart(2,'0')}</span><p>{punto}</p></div>
-            ))}</div>
-          </div>
-        )}
+      {monitorizacion && puntos.length > 0 && (
+        <div className="cad-tabla-scroll">
+          <table className="cad-tabla cad-tabla-vigilancia" aria-label="Tabla de monitorización durante el tratamiento">
+            <thead><tr><th scope="col">Control</th><th scope="col">Indicaciones</th></tr></thead>
+            <tbody>{puntos.map((punto, indice) => <tr key={indice}>
+              <th scope="row">{String(indice + 1).padStart(2, '0')}</th><td>{punto}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      )}
 
-        {vista === 'alertas' && (
-          <div className="cad-rapida-vista" data-vista="alertas">
-            <div className="cad-rapida-vista-cabecera">
-              <div><h3>Errores que conviene evitar</h3></div>
-              <button type="button" onClick={() => irA(indiceErrores)}>Ver apartado completo <span aria-hidden="true">↗</span></button>
-            </div>
-            <div className="cad-alertas-grid">{errores.map((punto, indice) => (
-              <div className="cad-alerta" key={indice}><span className="cad-alerta-marca" aria-hidden="true">!</span><span>{punto}</span></div>
-            ))}</div>
-          </div>
-        )}
-      </div>
+      {!criterios && !tratamiento && !monitorizacion && puntos.length > 0 && (
+        <ul className={errores ? 'cad-lista-errores' : 'cad-lista-puntos'}>
+          {puntos.map((punto, indice) => <li key={indice}>{punto}</li>)}
+        </ul>
+      )}
     </div>
   )
 }

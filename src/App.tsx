@@ -58,84 +58,83 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 }
 
 
+function tituloCortoCAD(titulo: string) {
+  if (/^definición y fisiopatología/i.test(titulo)) return 'Definición y fisiopatología'
+  if (/desencadenantes/i.test(titulo)) return 'Desencadenantes'
+  if (/criterios diagnósticos/i.test(titulo)) return 'Diagnóstico'
+  if (/evaluación inicial/i.test(titulo)) return 'Evaluación inicial'
+  if (/gravedad y sitio/i.test(titulo)) return 'Gravedad'
+  if (/tratamiento: secuencia práctica/i.test(titulo)) return 'Tratamiento'
+  if (/monitorización/i.test(titulo)) return 'Monitorización'
+  if (/resolución y transición/i.test(titulo)) return 'Resolución'
+  if (/errores clínicos/i.test(titulo)) return 'Errores frecuentes'
+  return titulo
+}
+
 function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
-  // Los contenidos se leen íntegros desde fichasClinicas; solo cambia su presentación.
-  const [cerradas, setCerradas] = useState<number[]>(() => ficha.secciones.map((_, indice) => indice).filter((indice) => indice !== 0))
-  const [activo, setActivo] = useState<number | 'fuentes' | 'resumen'>('resumen')
-  const referencias = useRef<(HTMLElement | null)[]>([])
-  const fuentesRef = useRef<HTMLDivElement | null>(null)
-  const resumenRef = useRef<HTMLDivElement | null>(null)
-  const indiceMovilRef = useRef<HTMLDetailsElement | null>(null)
+  // Un botón = un apartado clínico original; ninguna sección pertenece a otra.
+  const [seleccion, setSeleccion] = useState<number | 'fuentes'>(() => {
+    const diagnostico = ficha.secciones.findIndex((seccion) => /criterios diagnósticos/i.test(seccion.titulo))
+    return diagnostico >= 0 ? diagnostico : 0
+  })
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const navegacionRef = useRef<HTMLElement | null>(null)
+  const total = ficha.secciones.length + 1
+  const ordenActual = seleccion === 'fuentes' ? ficha.secciones.length : seleccion
 
-  const navegar = (destino: number | 'fuentes' | 'resumen') => {
-    setActivo(destino)
-    if (typeof destino === 'number') setCerradas((actual) => actual.filter((indice) => indice !== destino))
-    if (indiceMovilRef.current) indiceMovilRef.current.open = false
-
-    requestAnimationFrame(() => {
-      const objetivo = destino === 'fuentes' ? fuentesRef.current : destino === 'resumen' ? resumenRef.current : referencias.current[destino]
-      objetivo?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
+  const cambiarApartado = (destino: number | 'fuentes') => {
+    setSeleccion(destino)
+    requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
 
-  const indice = (enMovil: boolean) => (
-    <nav className="cad-reader-indice" aria-label={enMovil ? 'Índice de la ficha en móvil' : 'Ir a una sección'}>
-      <button type="button" className={'cad-reader-indice-enlace' + (activo === 'resumen' ? ' activo' : '')} onClick={() => navegar('resumen')} aria-current={activo === 'resumen' ? 'location' : undefined}>
-        <Icon name="activity" size={17}/> <span>Consulta rápida</span>
-      </button>
-      {ficha.secciones.map((seccion, numero) => (
-        <button key={numero} type="button" className={'cad-reader-indice-enlace' + (activo === numero ? ' activo' : '')} onClick={() => navegar(numero)} aria-current={activo === numero ? 'location' : undefined}>
-          <span className="cad-reader-numero">{String(numero + 1).padStart(2, '0')}</span><span>{seccion.titulo}</span>
-        </button>
-      ))}
-      <button type="button" className={'cad-reader-indice-enlace' + (activo === 'fuentes' ? ' activo' : '')} onClick={() => navegar('fuentes')} aria-current={activo === 'fuentes' ? 'location' : undefined}>
-        <Icon name="book" size={17}/><span>Bibliografía y guías</span>
-      </button>
-    </nav>
-  )
-  const todasCerradas = cerradas.length === ficha.secciones.length
+  const cambiarPorOrden = (orden: number) => {
+    cambiarApartado(orden === ficha.secciones.length ? 'fuentes' : orden)
+  }
 
   return (
-    <div className="cad-reader">
-      <aside className="cad-reader-aside" aria-label="Navegación del contenido clínico">
-        <div className="cad-reader-aside-titulo">CONTENIDO DE LA FICHA</div>
-        {indice(false)}
-      </aside>
-      <div className="cad-reader-main ficha-clinica">
-        <details className="cad-reader-movil" ref={indiceMovilRef}>
-          <summary><Icon name="layers" size={17}/><span>Índice de contenidos</span><span>{ficha.secciones.length} apartados</span><Icon name="chevron" size={16}/></summary>
-          {indice(true)}
-        </details>
-        <div className="cad-reader-resumen" ref={resumenRef} id="cad-resumen-visual">
-          <CADReferenciaRapida ficha={ficha} onIrASeccion={navegar} onVerFichaCompleta={() => navegar(0)}/>
+    <div className="cad-unica">
+      <nav className="cad-unica-navegacion" aria-label="Apartados de la ficha" ref={navegacionRef}>
+        {ficha.secciones.map((seccion, indice) => (
+          <button
+            type="button"
+            key={seccion.titulo}
+            className={'cad-unica-boton' + (seleccion === indice ? ' activo' : '')}
+            aria-pressed={seleccion === indice}
+            onClick={() => cambiarApartado(indice)}
+            title={seccion.titulo}
+          >
+            {tituloCortoCAD(seccion.titulo)}
+          </button>
+        ))}
+        <button type="button" className={'cad-unica-boton' + (seleccion === 'fuentes' ? ' activo' : '')} aria-pressed={seleccion === 'fuentes'} onClick={() => cambiarApartado('fuentes')}>Bibliografía</button>
+      </nav>
+
+      <div className="cad-unica-panel ficha-clinica" ref={panelRef}>
+        {seleccion === 'fuentes' ? (
+          <section className="cad-unica-seccion" aria-label="Bibliografía y guías">
+            <h2>Bibliografía y guías</h2>
+            <ul className="fuentes-clinicas cad-unica-fuentes">
+              {ficha.fuentes.map((fuente) => (
+                <li key={fuente.url}>
+                  <a href={fuente.url} target="_blank" rel="noreferrer">{fuente.titulo}<Icon name="arrow" size={15}/></a>
+                  <p>{fuente.nota}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : (
+          <section className="cad-unica-seccion" aria-label={ficha.secciones[seleccion].titulo}>
+            <h2>{ficha.secciones[seleccion].titulo}</h2>
+            <CADReferenciaRapida seccion={ficha.secciones[seleccion]}/>
+          </section>
+        )}
+
+        <div className="cad-unica-siguiente" aria-label="Cambiar de apartado">
+          <button type="button" onClick={() => cambiarPorOrden(ordenActual - 1)} disabled={ordenActual === 0}><Icon name="arrowRight" size={16}/> Anterior</button>
+          <span>{ordenActual + 1} de {total}</span>
+          <button type="button" onClick={() => cambiarPorOrden(ordenActual + 1)} disabled={ordenActual === total - 1}>Siguiente <Icon name="arrowRight" size={16}/></button>
         </div>
-        <div className="cad-reader-separador">
-          <div><span className="cad-reader-separador-eyebrow">LECTURA COMPLETA</span><h2>Contenido clínico</h2><p>Los apartados originales, sin recortes ni modificaciones.</p></div>
-          <button type="button" onClick={() => setCerradas(todasCerradas ? [] : ficha.secciones.map((_, indice) => indice))}>{todasCerradas ? 'Expandir todas' : 'Contraer todas'}</button>
-        </div>
-        <div className="ficha-premium-secciones">
-          {ficha.secciones.map((seccion, numero) => {
-            const abierto = !cerradas.includes(numero)
-            return (
-              <section key={numero} className={'ficha-premium-seccion' + (abierto ? ' abierta' : '')} ref={(elemento) => { referencias.current[numero] = elemento }}>
-                <h3>
-                  <button type="button" className="ficha-premium-toggle" aria-expanded={abierto} aria-controls={'cad-contenido-' + numero} onClick={() => { setActivo(numero); setCerradas((actual) => abierto ? [...actual, numero] : actual.filter((n) => n !== numero)) }}>
-                    <span className="ficha-premium-seccion-numero">{String(numero + 1).padStart(2, '0')}</span><span className="ficha-premium-seccion-titulo">{seccion.titulo}</span><span className="ficha-premium-seccion-estado"><Icon name="chevron" size={18}/></span>
-                  </button>
-                </h3>
-                <div className="ficha-premium-seccion-contenido" id={'cad-contenido-' + numero} hidden={!abierto}>
-                  {seccion.texto && <p>{seccion.texto}</p>}
-                  {seccion.puntos && <ul className={/tratamiento: secuencia práctica/i.test(seccion.titulo) ? 'ficha-premium-pasos' : /criterios diagnósticos/i.test(seccion.titulo) ? 'ficha-premium-criterios' : undefined}>{seccion.puntos.map((punto, indice) => <li key={indice}>{punto}</li>)}</ul>}
-                </div>
-              </section>
-            )
-          })}
-        </div>
-        <div className="ficha-premium-bibliografia" ref={fuentesRef}>
-          <div className="ficha-premium-fuentes-encabezado"><Icon name="book" size={19}/><h3>Bibliografía y guías</h3></div>
-          <ul className="fuentes-clinicas">{ficha.fuentes.map((fuente) => <li key={fuente.url}><a href={fuente.url} target="_blank" rel="noreferrer">{fuente.titulo}<Icon name="arrow" size={15}/></a><p>{fuente.nota}</p></li>)}</ul>
-        </div>
-        <p className="cad-reader-nota"><Icon name="shield" size={17}/><span><strong>Nota de seguridad:</strong> material de apoyo para estudio. Verificar la versión vigente de las guías, el cuadro básico y el protocolo institucional; las decisiones y dosis se individualizan según el paciente.</span></p>
+        <button className="cad-unica-volver-apartados" type="button" onClick={() => navegacionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Ver todos los apartados ↑</button>
       </div>
     </div>
   )
@@ -306,8 +305,7 @@ function App() {
            <header className="cad-pagina-encabezado">
              <p className="cad-pagina-ruta">Biblioteca clínica <span>/</span> Endocrinología</p>
              <h1>Cetoacidosis diabética</h1>
-             <p className="cad-pagina-descripcion">{seleccionado.resumen}</p>
-             <div className="cad-pagina-datos"><span><Icon name="clock" size={15}/>{fichaCAD.actualizacion}</span><span><Icon name="shield" size={15}/>{fichaCAD.alcance}</span></div>
+
            </header>
            <FichaInteractivaCAD ficha={fichaCAD}/>
          </div>
