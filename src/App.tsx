@@ -107,7 +107,7 @@ function FichaInteractivaCAD({ ficha }: { ficha: FichaClinica }) {
           {indice(true)}
         </details>
         <div className="cad-reader-resumen" ref={resumenRef} id="cad-resumen-visual">
-          <CADReferenciaRapida ficha={ficha} onIrASeccion={navegar}/>
+          <CADReferenciaRapida ficha={ficha} onIrASeccion={navegar} onVerFichaCompleta={() => navegar(0)}/>
         </div>
         <div className="cad-reader-separador">
           <div><span className="cad-reader-separador-eyebrow">LECTURA COMPLETA</span><h2>Contenido clínico</h2><p>Los apartados originales, sin recortes ni modificaciones.</p></div>
