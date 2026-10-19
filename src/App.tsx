@@ -229,28 +229,10 @@ function App() {
 
    const [especialidad, setEspecialidad] = useState('Todas')
 
-   const [seleccionado, setSeleccionado] = useState<(typeof temas)[number] | null>(() => window.location.hash === '#/ficha/cetoacidosis-diabetica' ? temas.find((tema) => tema.nombre === 'Cetoacidosis diabética') ?? null : null)
+   const [seleccionado, setSeleccionado] = useState<(typeof temas)[number] | null>(null)
    const [menuAbierto, setMenuAbierto] = useState(false)
    const [navActivo, setNavActivo] = useState<'inicio' | 'biblioteca' | 'favoritos' | 'recientes'>('inicio')
    const buscadorRef = useRef<HTMLInputElement>(null)
-
-   const posicionBiblioteca = useRef(0)
-   useEffect(() => {
-     const actualizarRuta = () => {
-       if (window.location.hash === '#/ficha/cetoacidosis-diabetica') {
-         const tema = temas.find((entrada) => entrada.nombre === 'Cetoacidosis diabética')
-         if (tema) setSeleccionado(tema)
-         window.scrollTo({ top: 0, behavior: 'instant' })
-       } else {
-         setSeleccionado((actual) => actual?.nombre === 'Cetoacidosis diabética' ? null : actual)
-         requestAnimationFrame(() => window.scrollTo({ top: posicionBiblioteca.current, behavior: 'instant' }))
-       }
-     }
-     window.addEventListener('popstate', actualizarRuta)
-     window.addEventListener('hashchange', actualizarRuta)
-     return () => { window.removeEventListener('popstate', actualizarRuta); window.removeEventListener('hashchange', actualizarRuta) }
-   }, [])
-
    useEffect(() => {
      const manejarAtajos = (evento: KeyboardEvent) => {
        if ((evento.metaKey || evento.ctrlKey) && evento.key.toLowerCase() === 'k') {
@@ -259,7 +241,7 @@ function App() {
        }
        if (evento.key === 'Escape') {
          setMenuAbierto(false)
-         setSeleccionado((actual) => actual?.nombre === 'Cetoacidosis diabética' ? actual : null)
+         setSeleccionado(null)
        }
      }
      document.addEventListener('keydown', manejarAtajos)
@@ -292,21 +274,8 @@ function App() {
      try { localStorage.setItem('manual-medico-recientes', JSON.stringify(recientes)) } catch { /* almacenamiento opcional */ }
    }, [recientes])
    const abrirFicha = (tema: (typeof temas)[number]) => {
-     if (tema.nombre === 'Cetoacidosis diabética') {
-       posicionBiblioteca.current = window.scrollY
-       if (window.location.hash !== '#/ficha/cetoacidosis-diabetica') window.history.pushState({ manualCAD: true }, '', '#/ficha/cetoacidosis-diabetica')
-       window.scrollTo({ top: 0, behavior: 'instant' })
-     }
      setSeleccionado(tema)
      setRecientes((actual) => [tema.nombre, ...actual.filter((nombre) => nombre !== tema.nombre)].slice(0, 5))
-   }
-   const volverDeCAD = () => {
-     if (window.history.state?.manualCAD) window.history.back()
-     else {
-       window.history.replaceState(null, '', '#biblioteca')
-       setSeleccionado(null)
-       window.scrollTo({ top: 0, behavior: 'instant' })
-     }
    }
    const alternarFavorito = (nombre: NombreTema) => {
      setFavoritos((actual) => actual.includes(nombre) ? actual.filter((item) => item !== nombre) : [...actual, nombre])
