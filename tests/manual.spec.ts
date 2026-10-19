@@ -109,3 +109,43 @@ test('cetoacidosis despliega la vista interactiva y conserva todos sus apartados
   await page.getByRole('button', { name: /Diabetes mellitus tipo 2/ }).last().click()
   await expect(page.getByRole('dialog').locator('.ficha-premium-layout')).toHaveCount(0)
 });
+
+
+test('panel clínico CAD muestra tablas y algoritmo sin alterar texto fuente', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Abrir ficha destacada' }).click()
+  const ventana = page.getByRole('dialog')
+  const panel = ventana.locator('.cad-rapida')
+  const datos = fichasClinicas['Cetoacidosis diabética']
+  const criterios = datos.secciones.find(s => /criterios diagnósticos/i.test(s.titulo))?.puntos ?? []
+  const tratamiento = datos.secciones.find(s => /tratamiento: secuencia práctica/i.test(s.titulo))?.puntos ?? []
+  const monitorizacion = datos.secciones.find(s => /monitorización durante tratamiento/i.test(s.titulo))?.puntos ?? []
+  const resolucion = datos.secciones.find(s => /resolución y transición/i.test(s.titulo))?.puntos ?? []
+  const errores = datos.secciones.find(s => /errores clínicos/i.test(s.titulo))?.puntos ?? []
+
+  await expect(panel).toBeVisible()
+  const barra = panel.getByRole('group', { name: 'Vista rápida de cetoacidosis' })
+  await expect(barra.getByRole('button', { name: /Diagnóstico/ })).toHaveAttribute('aria-pressed', 'true')
+  const tablaDiagnostico = panel.getByRole('table', { name: 'Tabla de criterios diagnósticos de cetoacidosis' })
+  await expect(tablaDiagnostico.locator('tbody tr')).toHaveCount(3)
+  for (const criterio of criterios.slice(0, 3)) await expect(tablaDiagnostico).toContainText(criterio)
+
+  await barra.getByRole('button', { name: /Algoritmo terapéutico/ }).click()
+  await expect(barra.getByRole('button', { name: /Algoritmo terapéutico/ })).toHaveAttribute('aria-pressed', 'true')
+  const pasos = panel.locator('.cad-algoritmo-paso')
+  await expect(pasos).toHaveCount(tratamiento.length)
+  for (let i = 0; i < tratamiento.length; i++) await expect(pasos.nth(i)).toContainText(tratamiento[i])
+
+  await barra.getByRole('button', { name: /Vigilancia y resolución/ }).click()
+  await expect(panel.getByRole('table', { name: 'Tabla de monitorización durante el tratamiento' }).locator('tbody tr')).toHaveCount(monitorizacion.length)
+  await expect(panel.locator('.cad-resolucion-item')).toHaveCount(resolucion.length)
+  await barra.getByRole('button', { name: /Errores a evitar/ }).click()
+  await expect(panel.locator('.cad-alerta')).toHaveCount(errores.length)
+
+  await ventana.getByRole('navigation', { name: 'Ir a una sección' })
+    .getByRole('button', { name: /Vista rápida: tablas y algoritmos/ }).click()
+  await expect(panel).toBeVisible()
+  await expect(ventana.locator('.ficha-premium-seccion')).toHaveCount(datos.secciones.length)
+  await expect(ventana.locator('.fuentes-clinicas a')).toHaveCount(datos.fuentes.length)
+  await ventana.getByLabel('Cerrar ficha').click()
+})
