@@ -6,14 +6,13 @@ type Vista = 'diagnostico' | 'tratamiento' | 'vigilancia' | 'alertas'
 type Paso = {
   numero: number
   etiqueta: string
-  texto: string
+  detalle: string
 }
 
-const pestañas: { id: Vista; titulo: string; abreviatura: string }[] = [
-  { id: 'diagnostico', titulo: 'Diagnóstico', abreviatura: '01' },
-  { id: 'tratamiento', titulo: 'Tratamiento', abreviatura: '02' },
-  { id: 'vigilancia', titulo: 'Seguimiento', abreviatura: '03' },
-  { id: 'alertas', titulo: 'Precauciones', abreviatura: '04' },
+const pestañas: { id: 'diagnostico' | 'tratamiento' | 'vigilancia'; titulo: string; ayuda: string }[] = [
+  { id: 'diagnostico', titulo: 'Diagnóstico', ayuda: 'Criterios' },
+  { id: 'tratamiento', titulo: 'Tratamiento', ayuda: 'Manejo' },
+  { id: 'vigilancia', titulo: 'Seguimiento', ayuda: 'Vigilancia y resolución' },
 ]
 
 function dividirEtiqueta(texto: string) {
@@ -28,7 +27,7 @@ function obtenerPasos(puntos: string[]): Paso[] {
     return {
       numero: partes ? Number(partes[1]) : indice + 1,
       etiqueta: partes ? partes[2].trim() : 'Paso ' + (indice + 1),
-      texto,
+      detalle: partes ? texto.slice(partes[0].length).trim() : texto,
     }
   })
 }
@@ -41,9 +40,11 @@ function obtenerPasos(puntos: string[]): Paso[] {
 export function CADReferenciaRapida({
   ficha,
   onIrASeccion,
+  onVerFichaCompleta,
 }: {
   ficha: FichaClinica
   onIrASeccion: (indice: number) => void
+  onVerFichaCompleta: () => void
 }) {
   const [vista, setVista] = useState<Vista>('diagnostico')
   const [formatoTratamiento, setFormatoTratamiento] = useState<'algoritmo' | 'tabla'>('algoritmo')
@@ -73,9 +74,12 @@ export function CADReferenciaRapida({
     <div className="cad-rapida" aria-label="Herramientas de consulta rápida">
       <div className="cad-rapida-cabecera">
         <div>
-          <h2>Consulta rápida</h2>
-          <p>Datos clave y secuencia clínica</p>
+          <h2>¿Qué necesitas consultar?</h2>
+          <p>Elige un tema para ver lo esencial.</p>
         </div>
+        <button className="cad-rapida-ver-todo" type="button" onClick={onVerFichaCompleta}>
+          Ir a la ficha completa <span aria-hidden="true">↓</span>
+        </button>
       </div>
 
       <div className="cad-rapida-pestañas" role="group" aria-label="Vista rápida de cetoacidosis">
@@ -87,10 +91,13 @@ export function CADReferenciaRapida({
             aria-pressed={vista === pestaña.id}
             onClick={() => setVista(pestaña.id)}
           >
-            <span aria-hidden="true">{pestaña.abreviatura}</span>{pestaña.titulo}
+            <strong>{pestaña.titulo}</strong><small>{pestaña.ayuda}</small>
           </button>
         ))}
       </div>
+      <button type="button" className={'cad-rapida-precauciones' + (vista === 'alertas' ? ' seleccionada' : '')} aria-pressed={vista === 'alertas'} onClick={() => setVista('alertas')}>
+        <span aria-hidden="true">!</span> Precauciones clínicas: errores que evitar <span aria-hidden="true">→</span>
+      </button>
 
       <div className="cad-rapida-panel" aria-live="polite">
         {vista === 'diagnostico' && (
@@ -103,11 +110,11 @@ export function CADReferenciaRapida({
               <>
                 <div className="cad-tabla-scroll">
                   <table className="cad-tabla" aria-label="Tabla de criterios diagnósticos de cetoacidosis">
-                    <thead><tr><th scope="col">Componente</th><th scope="col">Criterio íntegro de la ficha</th></tr></thead>
+                    <thead><tr><th scope="col">Componente</th><th scope="col">Criterio</th></tr></thead>
                     <tbody>
                       {criterios.slice(0, 3).map((punto) => {
                         const dato = dividirEtiqueta(punto)
-                        return <tr key={punto}><th scope="row">{dato.etiqueta}</th><td>{punto}</td></tr>
+                        return <tr key={punto}><th scope="row">{dato.etiqueta}</th><td>{dato.detalle}</td></tr>
                       })}
                     </tbody>
                   </table>
@@ -134,8 +141,8 @@ export function CADReferenciaRapida({
                 <div key={paso.numero} className="cad-algoritmo-paso">
                   <span className="cad-algoritmo-marca">{String(paso.numero).padStart(2,'0')}</span>
                   <div className="cad-algoritmo-tarjeta">
-                    <div className="cad-algoritmo-etiqueta"><strong>{paso.etiqueta}</strong><span>PASO {paso.numero}</span></div>
-                    <p>{paso.texto}</p>
+                    <div className="cad-algoritmo-etiqueta"><strong>{paso.etiqueta}</strong></div>
+                    <p>{paso.detalle}</p>
                   </div>
                 </div>
               ))}
@@ -146,7 +153,7 @@ export function CADReferenciaRapida({
                   <tbody>{pasos.map((paso) => <tr key={paso.numero}>
                     <th scope="row">{String(paso.numero).padStart(2, '0')}</th>
                     <td><strong>{paso.etiqueta}</strong></td>
-                    <td>{paso.texto}</td>
+                    <td>{paso.detalle}</td>
                   </tr>)}</tbody>
                 </table>
               </div>
