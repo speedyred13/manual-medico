@@ -263,6 +263,28 @@ function App() {
      recientes: 'Consultas recientes'
    }[navActivo]
 
+   if (seleccionado?.nombre === 'Cetoacidosis diabética') {
+     const fichaCAD = fichasClinicas['Cetoacidosis diabética']
+     return (
+       <main className={'app tema-' + temaVisual + ' cad-pagina'} id="cad-pagina">
+         <header className="cad-pagina-barra">
+           <button type="button" className="cad-pagina-volver" onClick={() => setSeleccionado(null)} aria-label="Volver al manual"><Icon name="arrowRight" size={18}/> <span>Volver al manual</span></button>
+           <span className="cad-pagina-marca"><span className="cad-pagina-cruz"><Icon name="cross" size={15}/></span>Manual Médico</span>
+           <button type="button" className="cad-pagina-tema" onClick={() => setTemaVisual((actual) => actual === 'claro' ? 'oscuro' : 'claro')} aria-label={temaVisual === 'claro' ? 'Activar modo oscuro' : 'Activar modo claro'}><Icon name={temaVisual === 'claro' ? 'moon' : 'sun'} size={19}/></button>
+         </header>
+         <div className="cad-pagina-contenedor">
+           <header className="cad-pagina-encabezado">
+             <p className="cad-pagina-ruta">Biblioteca clínica <span>/</span> Endocrinología</p>
+             <h1>Cetoacidosis diabética</h1>
+             <p className="cad-pagina-descripcion">{seleccionado.resumen}</p>
+             <div className="cad-pagina-datos"><span><Icon name="clock" size={15}/>{fichaCAD.actualizacion}</span><span><Icon name="shield" size={15}/>{fichaCAD.alcance}</span></div>
+           </header>
+           <FichaInteractivaCAD ficha={fichaCAD}/>
+         </div>
+       </main>
+     )
+   }
+
    return (
      <main className={'app tema-' + temaVisual}>
        {menuAbierto && <button className="sidebar-scrim" aria-label="Cerrar menú de navegación" type="button" onClick={() => setMenuAbierto(false)} />}
